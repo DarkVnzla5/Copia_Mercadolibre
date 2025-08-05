@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@plugin "daisyui"{
+  themes: 
+    luxury --prefersdark,
+    cyberpunk,
+    synthwave,
+    fantasy,
+    acid,
+    halloween ,
+    abyss --default ;
+}
