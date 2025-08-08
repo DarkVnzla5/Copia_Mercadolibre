@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { IoPersonCircleSharp } from "react-icons/io5";
 import { Link } from "react-router";
+import { GoArchive } from "react-icons/go";
 
 function Header() {
   const [dolarPromedio, setDolarPromedio] = useState(null);
@@ -21,9 +22,9 @@ function Header() {
   }, []);
 
   return (
-    <nav className="flex flex-wrap justify-evenly w-full bg-base-300 items-center gap-4 py-5">
+    <nav className="navbar bg-base-100 justify-between p-4">
       {/* Left Section: Logo and Name */}
-      <section className="flex items-center justify-between gap-2">
+      <section className="navbar-start">
         <Link to="/">
           <img
             src="\Logo.jpg"
@@ -31,15 +32,14 @@ function Header() {
             className="h-20 w-24 mr-28 aspect-video shadow-lg"
           />
         </Link>
-
-        <span className="font-bold text-primary p-4 rounded-lg shadow-lg hover:bg-base-content transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 cursor-pointer">
+        <span className="font-bold max-lg:hidden text-primary p-2 rounded-lg hover:bg-primary hover:text-primary-content shadow-lg cursor-pointer">
           Comercial Vuelvan Caras, C.A.
         </span>
       </section>
 
       {/* Center Section: Dólar Promedio */}
-      <section className="flex justify-center items-center gap-2 ">
-        <div className="text-primary font-bold">
+      <section className="navbar-center gap-2">
+        <div className="btn-primary btn">
           <span>
             Dólar BCV:{" "}
             {dolarPromedio ? (
@@ -50,26 +50,35 @@ function Header() {
                 }).format(dolarPromedio)}
               </span>
             ) : (
-              <span className="text-red-500">Cargando...</span>
+              <span className="loading loading-spinner loading-md"></span>
             )}
           </span>
         </div>
       </section>
 
       {/* Center Section: Management of items*/}
-      <section>
-        <Link to="/Items" className="btn btn-ghost btn-circle">
+      <section className="navbar-center gap-2 ">
+        <Link
+          to="/Items"
+          className="font-bold max-lg:hidden text-primary p-2 rounded-lg hover:bg-primary hover:text-primary-content shadow-lg cursor-pointer"
+        >
           Gestion de Productos
+        </Link>
+        <Link
+          to="/Items"
+          className="lg:visible text-primary p-2 items-center justify-center flex  rounded hover:bg-primary hover:text-primary-content shadow-lg cursor-pointer"
+        >
+          <GoArchive />
         </Link>
       </section>
 
       {/* Profiles*/}
-      <section className="flex">
-        <div className="dropdown dropdown-end">
+      <section className="navbar-end">
+        <div className="dropdown dropdown-end dropdown-hover">
           <div
             tabIndex={0}
             role="button"
-            className="btn btn-ghost btn-circle avatar"
+            className="btn btn-primary btn-circle avatar"
           >
             <div className="w-10 rounded-full">
               <IoPersonCircleSharp className="size-full " />
@@ -82,16 +91,22 @@ function Header() {
             <li className="justify-between">
               <Link to="/Profile">Perfil</Link>
             </li>
-            <li>
-              <Link to="/configuration">Configuración</Link>
-            </li>
-            <li>
-              <Link to="/Profile">Perfil</Link>
-            </li>
+
             <li>
               <Link to="/signOut">Cerrar sesión</Link>
             </li>
           </ul>
+        </div>
+      </section>
+      {/*Sesions */}
+      <section className="navbar-end">
+        <div>
+          <Link to="/login" className="btn btn-primary">
+            Iniciar Sesión
+          </Link>
+          <Link to="/signup" className="btn btn-primary">
+            Crear Cuenta
+          </Link>
         </div>
       </section>
     </nav>

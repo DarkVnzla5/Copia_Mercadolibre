@@ -1,11 +1,7 @@
 @import "tailwindcss";
-@plugin "daisyui"{
+
+@plugin "daisyui" {
   themes: 
-    luxury --prefersdark,
-    cyberpunk,
-    synthwave,
-    fantasy,
-    acid,
-    halloween ,
-    abyss --default ;
+  business --default, 
+  dark --prefersdark;
 }

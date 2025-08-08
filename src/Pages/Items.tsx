@@ -50,10 +50,10 @@ function Items() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10 font-sans">
-      <h1 className="text-4xl font-extrabold mb-8 rounded-lg p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl">
-        🔧 Gestor de Items de Ferretería 🛠️
-      </h1>
+    <div className="min-h-screen bg-base-300 flex flex-col items-center py-10 font-sans">
+      <p className="badge badge-primary-content p-5 rounded-md mb-4 text-lg font-bold">
+        🔧 Gestor de Productos 🛠️
+      </p>
       <ProductForm
         onAddProduct={addProduct}
         onUpdateProduct={updateProduct}
@@ -186,16 +186,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   return (
-    <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md mb-8 border border-gray-200">
-      <h2 className="text-2xl font-bold text-gray-700 mb-6 text-center">
+    <div className="p-8 rounded-xl shadow-lg w-full max-w-md mb-8 border">
+      <h2 className="text-2xl font-bold  mb-6 text-center">
         {editingProduct ? "Editar Item" : "Agregar Nuevo Item"}
       </h2>
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label
-            htmlFor="id"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="id" className="label">
             Codigo:
           </label>
           <input
@@ -204,23 +201,18 @@ const ProductForm: React.FC<ProductFormProps> = ({
             name="id"
             value={formData.id}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-4 py-2 border sm:text-sm"
             placeholder="Ej: H-001"
             required
             disabled={!!editingProduct} /* Deshabilita la ID en modo edición */
           />
           {editingProduct && (
-            <p className="text-xs text-gray-500 mt-1">
-              El Codigo no se puede modificar.
-            </p>
+            <p className="text-xs  mt-1">El Codigo no se puede modificar.</p>
           )}
         </div>
 
         <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="name" className="label">
             Nombre:
           </label>
           <input
@@ -229,17 +221,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-4 py-2 border sm:text-sm"
             placeholder="Ej: Martillo"
             required
           />
         </div>
 
         <div>
-          <label
-            htmlFor="brand"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="brand" className="label">
             Marca:
           </label>
           <input
@@ -248,17 +237,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
             name="brand"
             value={formData.brand}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-4 py-2 border rounded-md sm:text-sm"
             placeholder="Ej: Truper"
             required
           />
         </div>
 
         <div>
-          <label
-            htmlFor="images"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="images" className="label">
             Imágenes (URLs separadas por comas):
           </label>
           <input
@@ -267,17 +253,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
             name="images"
             value={formData.images}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-4 py-2 border rounded-md sm:text-sm"
             placeholder="Ej: url1.jpg, url2.png"
             required
           />
         </div>
 
         <div>
-          <label
-            htmlFor="category"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="category" className="label">
             Categoría:
           </label>
           <input
@@ -286,16 +269,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
             name="category"
             value={formData.category}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-4 py-2 border rounded-md sm:text-sm"
             placeholder="Ej: Herramientas Manuales"
             required
           />
         </div>
 
-        <button
-          type="submit"
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out transform hover:scale-105"
-        >
+        <button type="submit" className="btn btn-primary w-full">
           {editingProduct ? "Guardar Cambios" : "Agregar Producto"}
         </button>
 
@@ -303,7 +283,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           <button
             type="button"
             onClick={handleCancelEdit}
-            className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-lg font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out mt-3"
+            className="btn-primary "
           >
             Cancelar Edición
           </button>
@@ -312,9 +292,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         {message && (
           <div
             className={`mt-4 p-3 rounded-md text-center text-sm ${
-              messageType === "success"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
+              messageType === "success" ? "btn-success" : "btn-error"
             }`}
           >
             {message}

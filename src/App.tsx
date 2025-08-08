@@ -31,11 +31,20 @@ function App() {
     >
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Layout />} />
-          <Route index element={<Home />} />
-          <Route path="/Items" element={<Items />} />
-          <Route path="/About" element={<About />} />
-          <Route path="/Profile" element={<Profile />} />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="/Items" element={<Items />} />
+            <Route path="/About" element={<About />} />
+            <Route path="/Profile" element={<Profile />} />
+          </Route>
+          <Route
+            path="*"
+            element={
+              <div className="text-center text-2xl text-red-500">
+                Page Not Found
+              </div>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>
