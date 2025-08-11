@@ -6,10 +6,12 @@ import Layout from "./components/Layout.tsx";
 import { ErrorBoundary } from "react-error-boundary";
 import Profile from "./Pages/Profile.tsx";
 import About from "./Pages/About.tsx";
+import LogIn from "./Pages/LogIn.tsx";
+import SignUp from "./Pages/SignUp.tsx";
 
 import "./App.css";
 
-function App() {
+const App: React.FC = () => {
   return (
     <ErrorBoundary
       fallbackRender={({ error, resetErrorBoundary }) => (
@@ -32,10 +34,12 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
+            <Route index path="/Home" element={<Home />} />
             <Route path="/Items" element={<Items />} />
             <Route path="/About" element={<About />} />
             <Route path="/Profile" element={<Profile />} />
+            <Route path="/LogIn" element={<LogIn />} />
+            <Route path="/SignUp" element={<SignUp />} />
           </Route>
           <Route
             path="*"
@@ -49,5 +53,5 @@ function App() {
       </BrowserRouter>
     </ErrorBoundary>
   );
-}
+};
 export default App;

@@ -5,10 +5,11 @@ const LoginPage: React.FC = () => {
   return (
     <div className="hero min-h-screen bg-base-200">
       <div className="hero-content flex-col lg:flex-row-reverse">
-        <div className="text-center lg:text-left">
+        <div className="text-center lg:text-left text-primary">
           <h1 className="text-5xl font-bold">Iniciar Sesión</h1>
-          <p className="py-6">
-            Inicia sesión para acceder a tu panel de control.
+          <p className="p-2">
+            Ingresa tus credenciales para acceder a tu cuenta y comenzar a
+            disfrutar de nuestros servicios.
           </p>
         </div>
         <div className="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
@@ -31,11 +32,11 @@ const LoginPage: React.FC = () => {
               <input
                 type="password"
                 placeholder="contraseña"
-                className="input input-bordered"
+                className="input input-bordered py-4"
                 required
               />
               <label className="label">
-                <Link to="#" className="label-text-alt link link-hover">
+                <Link to="#" className="btn-primary btn p-4">
                   ¿Olvidaste tu contraseña?
                 </Link>
               </label>

@@ -3,7 +3,7 @@ import { IoPersonCircleSharp } from "react-icons/io5";
 import { Link } from "react-router";
 import { GoArchive } from "react-icons/go";
 
-function Header() {
+const Header: React.FC = () => {
   const [dolarPromedio, setDolarPromedio] = useState(null);
 
   useEffect(() => {
@@ -22,7 +22,7 @@ function Header() {
   }, []);
 
   return (
-    <nav className="navbar bg-base-100 justify-between p-4">
+    <nav className="navbar bg-base-100 justify-around p-4 gap-2">
       {/* Left Section: Logo and Name */}
       <section className="navbar-start">
         <Link to="/">
@@ -38,7 +38,7 @@ function Header() {
       </section>
 
       {/* Center Section: Dólar Promedio */}
-      <section className="navbar-center gap-2">
+      <section className="navbar-center gap-4">
         <div className="btn-primary btn">
           <span>
             Dólar BCV:{" "}
@@ -57,19 +57,35 @@ function Header() {
       </section>
 
       {/* Center Section: Management of items*/}
-      <section className="navbar-center gap-2 ">
-        <Link
-          to="/Items"
-          className="font-bold max-lg:hidden text-primary p-2 rounded-lg hover:bg-primary hover:text-primary-content shadow-lg cursor-pointer"
-        >
+      <section className="navbar-center gap-4">
+        <Link to="/Items" className="btn btn-primary lg:visible max-lg:hidden">
           Gestion de Productos
         </Link>
-        <Link
-          to="/Items"
-          className="lg:visible text-primary p-2 items-center justify-center flex  rounded hover:bg-primary hover:text-primary-content shadow-lg cursor-pointer"
-        >
+        <Link to="/Items" className=" max-lg:visible lg:hidden btn btn-primary">
           <GoArchive />
         </Link>
+      </section>
+      <section className="navbar-end gap-4 items-center justify-center">
+        <fieldset className="fieldset">
+          <label className="flex gap-2 cursor-pointer items-center">
+            <input
+              type="radio"
+              name="theme-radios"
+              className="radio radio-sm theme-controller"
+              value="fanstasy"
+            />
+            Light
+          </label>
+          <label className="flex gap-2 cursor-pointer items-center">
+            <input
+              type="radio"
+              name="theme-radios"
+              className="radio radio-sm theme-controller"
+              value="business"
+            />
+            Dark
+          </label>
+        </fieldset>
       </section>
 
       {/* Profiles*/}
@@ -101,15 +117,15 @@ function Header() {
       {/*Sesions */}
       <section className="navbar-end">
         <div>
-          <Link to="/login" className="btn btn-primary">
+          <Link to="/Login" className="btn btn-primary">
             Iniciar Sesión
           </Link>
-          <Link to="/signup" className="btn btn-primary">
+          <Link to="/Signup" className="btn btn-primary">
             Crear Cuenta
           </Link>
         </div>
       </section>
     </nav>
   );
-}
+};
 export default Header;

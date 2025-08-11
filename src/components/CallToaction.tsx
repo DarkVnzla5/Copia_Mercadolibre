@@ -13,7 +13,7 @@ const CallToActionSection: React.FC = () => {
             Únete a cientos de PyMEs que ya están gestionando su ecommerce e
             inventario de forma eficiente con nuestra plataforma.
           </p>
-          <Link to="/signup" className="btn btn-primary btn-lg">
+          <Link to="/Signup" className="btn btn-primary btn-lg">
             ¡Empieza tu Prueba Gratuita!
           </Link>
         </div>
