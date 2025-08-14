@@ -1,19 +1,20 @@
 import React from "react";
 import { products } from "../mocks/products";
-function Products() {
+
+const Products: React.FC = () => {
   return (
     <section>
       <ul className="max-lg:gap-4 grid max-sm:items-center max-sm:justify-center lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
         {products.map((product) => (
           <li
             key={product.id}
-            className="card-sm card w-96 gap-2 p-5 bg-neutral shadow-xl"
+            className="card-sm card p-4 gap-2 bg-base-300 shadow-xl m-2"
           >
             <figure>
               <img
                 src={product.thumbnail}
                 alt={product.title}
-                className="aspect-video h-full w-full block"
+                className="max-w-full h-auto"
               />
             </figure>
             <div className="text-primary card-title">
@@ -27,5 +28,5 @@ function Products() {
       </ul>
     </section>
   );
-}
+};
 export default Products;

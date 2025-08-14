@@ -34,7 +34,7 @@ const App: React.FC = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index path="/Home" element={<Home />} />
+            <Route index element={<Home />} />
             <Route path="/Items" element={<Items />} />
             <Route path="/About" element={<About />} />
             <Route path="/Profile" element={<Profile />} />

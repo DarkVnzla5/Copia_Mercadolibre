@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { IoPersonCircleSharp } from "react-icons/io5";
 import { Link } from "react-router";
 import { GoArchive } from "react-icons/go";
+import { PiSignInFill } from "react-icons/pi";
 
 const Header: React.FC = () => {
   const [dolarPromedio, setDolarPromedio] = useState(null);
@@ -117,10 +118,26 @@ const Header: React.FC = () => {
       {/*Sesions */}
       <section className="navbar-end">
         <div>
-          <Link to="/Login" className="btn btn-primary">
+          <Link
+            to="/Login"
+            className="btn btn-primary lg:hidden max-lg:visible"
+          >
+            <PiSignInFill />
+          </Link>
+        </div>
+        <div>
+          <Link
+            to="/Login"
+            className="btn btn-primary lg:visible max-lg:hidden"
+          >
             Iniciar Sesión
           </Link>
-          <Link to="/Signup" className="btn btn-primary">
+        </div>
+        <div>
+          <Link
+            to="/Signup"
+            className="btn btn-primary lg:visible max-lg:hidden"
+          >
             Crear Cuenta
           </Link>
         </div>

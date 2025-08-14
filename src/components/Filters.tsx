@@ -1,10 +1,11 @@
-import { useState, React } from "react";
-function Filters() {
+import React, { useState } from "react";
+
+const Filters: React.FC = () => {
   const [minprice, setminPrice] = useState(0);
   const [maxprice, setmaxPrice] = useState(0);
 
   return (
-    <nav className="flex flex-col flex-wrap gap-2 items-center bg-info-content">
+    <nav className="flex flex-col flex-wrap gap-2  items-center bg-info-content">
       <section className="flex flex-col items-center mb-4 justify-between text-primary p-4 gap-2">
         <div>{minprice > 0 && <span>Desde ${minprice}</span>}</div>
         <div>{maxprice > 0 && <span>Hasta ${maxprice}</span>}</div>
@@ -30,7 +31,7 @@ function Filters() {
           placeholder="Precio Minimo"
           onChange={(e) => setminPrice(Number(e.target.value))}
         />
-        -
+        <div className="divider text-primary"> - </div>
         <input
           type="search"
           className="input w-fit"
@@ -52,5 +53,5 @@ function Filters() {
       </section>
     </nav>
   );
-}
+};
 export default Filters;
