@@ -33,9 +33,11 @@ const Header: React.FC = () => {
             className="h-20 w-24 mr-28 aspect-video shadow-lg"
           />
         </Link>
-        <span className="font-bold max-lg:hidden text-primary p-2 rounded-lg hover:bg-primary hover:text-primary-content shadow-lg cursor-pointer">
-          Comercial Vuelvan Caras, C.A.
-        </span>
+        <Link to="Dashboard">
+          <span className="font-bold max-lg:hidden text-primary p-2 rounded-lg hover:bg-primary hover:text-primary-content shadow-lg cursor-pointer">
+            Comercial Vuelvan Caras, C.A.
+          </span>
+        </Link>
       </section>
 
       {/* Center Section: Dólar Promedio */}
@@ -73,7 +75,7 @@ const Header: React.FC = () => {
               type="radio"
               name="theme-radios"
               className="radio radio-sm theme-controller"
-              value="fanstasy"
+              value="emerald"
             />
             Light
           </label>
@@ -83,6 +85,7 @@ const Header: React.FC = () => {
               name="theme-radios"
               className="radio radio-sm theme-controller"
               value="business"
+              defaultChecked
             />
             Dark
           </label>
@@ -116,7 +119,7 @@ const Header: React.FC = () => {
         </div>
       </section>
       {/*Sesions */}
-      <section className="navbar-end">
+      <section className="navbar-end gap-2">
         <div>
           <Link
             to="/Login"

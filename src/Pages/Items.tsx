@@ -186,12 +186,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   return (
-    <div className="p-8 rounded-xl shadow-lg w-full max-w-md mb-8 border">
-      <h2 className="text-2xl font-bold  mb-6 text-center">
+    <div className="card bg-base-100 shadow-xl p-8 w-full max-w-2xl border border-gray-200 gap-2">
+      <p className="text-2xl font-bold  mb-6 text-center">
         {editingProduct ? "Editar Item" : "Agregar Nuevo Item"}
-      </h2>
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
+      </p>
+      <form onSubmit={handleSubmit}>
+        <div className="card-title">
           <label htmlFor="id" className="label">
             Codigo:
           </label>
@@ -211,7 +211,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           )}
         </div>
 
-        <div>
+        <div className="card-title">
           <label htmlFor="name" className="label">
             Nombre:
           </label>
