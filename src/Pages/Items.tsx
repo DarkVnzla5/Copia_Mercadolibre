@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useItemsStore } from "../stores/itemsStore"; // Importa el store de Zustand
 
 // Define la interfaz para un Producto
 interface Product {
@@ -11,40 +12,23 @@ interface Product {
 
 // Componente principal Items.tsx
 function Items() {
-  // Estado para almacenar y mostrar los productos agregados
-  const [products, setProducts] = useState<Product[]>([]);
-  // Estado para manejar el producto que se está editando (null si no hay edición)
+  // Ahora usamos el store de Zustand
+  const {
+    products,
+    fetchProducts,
+    deleteProduct,
+    updateProduct,
+    addProduct,
+    isLoading,
+    error,
+  } = useItemsStore();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  // Función para agregar un nuevo producto
-  const addProduct = (newProduct: Product) => {
-    setProducts((prevProducts) => [...prevProducts, newProduct]);
-  };
+  // Llamada a la API al montar el componente
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
-  // Función para actualizar un producto existente
-  const updateProduct = (updatedProduct: Product) => {
-    setProducts((prevProducts) =>
-      prevProducts.map((product) =>
-        product.id === updatedProduct.id ? updatedProduct : product
-      )
-    );
-    setEditingProduct(null); // Sale del modo edición después de actualizar
-  };
-
-  // Función para eliminar un producto
-  const deleteProduct = (id: string) => {
-    // Usamos un modal de confirmación simple en lugar de alert()
-    const confirmDelete = window.confirm(
-      "¿Estás seguro de que quieres eliminar este producto?"
-    );
-    if (confirmDelete) {
-      setProducts((prevProducts) =>
-        prevProducts.filter((product) => product.id !== id)
-      );
-    }
-  };
-
-  // Función para iniciar la edición de un producto
   const startEditing = (product: Product) => {
     setEditingProduct(product);
   };
@@ -54,6 +38,11 @@ function Items() {
       <p className="badge badge-primary-content p-5 rounded-md mb-4 text-lg font-bold">
         🔧 Gestor de Productos 🛠️
       </p>
+
+      {/* Muestra mensajes de carga o error del store */}
+      {isLoading && <p>Cargando productos...</p>}
+      {error && <p className="text-red-500">{error}</p>}
+
       <ProductForm
         onAddProduct={addProduct}
         onUpdateProduct={updateProduct}
@@ -69,10 +58,11 @@ function Items() {
   );
 }
 
-// Componente del formulario para agregar/editar productos
+// ... (Los componentes ProductForm y ProductList se mantienen igual) ...
+
 interface ProductFormProps {
-  onAddProduct: (product: Product) => void;
-  onUpdateProduct: (product: Product) => void;
+  onAddProduct: (product: Product) => Promise<void>;
+  onUpdateProduct: (product: Product) => Promise<void>;
   editingProduct: Product | null;
   setEditingProduct: (product: Product | null) => void;
 }
@@ -83,33 +73,29 @@ const ProductForm: React.FC<ProductFormProps> = ({
   editingProduct,
   setEditingProduct,
 }) => {
-  // Estado para los campos del formulario
   const [formData, setFormData] = useState({
     id: "",
     name: "",
     brand: "",
-    images: "", // Las imágenes se ingresan como un string separado por comas
+    images: "",
     category: "",
   });
 
-  // Estado para mensajes de error o éxito
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error" | "">("");
 
-  // Efecto para cargar los datos del producto en edición al formulario
   useEffect(() => {
     if (editingProduct) {
       setFormData({
         id: editingProduct.id,
         name: editingProduct.name,
         brand: editingProduct.brand,
-        images: editingProduct.images.join(", "), // Convierte el array de vuelta a string
+        images: editingProduct.images.join(", "),
         category: editingProduct.category,
       });
-      setMessage(""); // Limpiar mensajes al iniciar edición
+      setMessage("");
       setMessageType("");
     } else {
-      // Reiniciar formulario cuando se sale del modo edición
       setFormData({
         id: "",
         name: "",
@@ -120,7 +106,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }
   }, [editingProduct]);
 
-  // Maneja los cambios en los inputs del formulario
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -131,11 +116,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }));
   };
 
-  // Maneja el envío del formulario
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validación básica de campos
     if (
       !formData.id ||
       !formData.name ||
@@ -148,7 +131,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
       return;
     }
 
-    // Crea un nuevo objeto producto
     const productToSave: Product = {
       id: formData.id,
       name: formData.name,
@@ -160,19 +142,20 @@ const ProductForm: React.FC<ProductFormProps> = ({
       category: formData.category,
     };
 
-    if (editingProduct) {
-      // Si estamos editando, actualizamos el producto
-      onUpdateProduct(productToSave);
-      setMessage("¡Producto actualizado exitosamente!");
+    try {
+      if (editingProduct) {
+        await onUpdateProduct(productToSave);
+        setMessage("¡Producto actualizado exitosamente!");
+      } else {
+        await onAddProduct(productToSave);
+        setMessage("¡Producto agregado exitosamente!");
+      }
       setMessageType("success");
-    } else {
-      // Si no estamos editando, agregamos un nuevo producto
-      onAddProduct(productToSave);
-      setMessage("¡Producto agregado exitosamente!");
-      setMessageType("success");
+    } catch (err) {
+      setMessage("Hubo un error al procesar la solicitud.");
+      setMessageType("error");
     }
 
-    // Limpia el mensaje después de unos segundos
     setTimeout(() => {
       setMessage("");
       setMessageType("");
@@ -180,14 +163,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   const handleCancelEdit = () => {
-    setEditingProduct(null); // Cancela el modo edición
-    setMessage(""); // Limpiar mensajes
+    setEditingProduct(null);
+    setMessage("");
     setMessageType("");
   };
 
   return (
     <div className="card bg-base-100 shadow-xl p-8 w-full max-w-2xl border border-gray-200 gap-2">
-      <p className="text-2xl font-bold  mb-6 text-center">
+      <p className="text-2xl font-bold mb-6 text-center">
         {editingProduct ? "Editar Item" : "Agregar Nuevo Item"}
       </p>
       <form onSubmit={handleSubmit}>
@@ -204,14 +187,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
             className="mt-1 block w-full px-4 py-2 border sm:text-sm"
             placeholder="Ej: H-001"
             required
-            disabled={!!editingProduct} /* Deshabilita la ID en modo edición */
+            disabled={!!editingProduct}
           />
           {editingProduct && (
-            <p className="text-xs  mt-1">El Codigo no se puede modificar.</p>
+            <p className="text-xs mt-1">El Codigo no se puede modificar.</p>
           )}
         </div>
-
-        <div className="card-title">
+        <div>
           <label htmlFor="name" className="label">
             Nombre:
           </label>
@@ -226,7 +208,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
             required
           />
         </div>
-
         <div>
           <label htmlFor="brand" className="label">
             Marca:
@@ -242,13 +223,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
             required
           />
         </div>
-
         <div>
           <label htmlFor="images" className="label">
             Imágenes (URLs separadas por comas):
           </label>
+          {/* CORRECCIÓN: CAMBIAR type="file" a type="text" */}
           <input
-            type="file"
+            type="text"
             id="images"
             name="images"
             value={formData.images}
@@ -258,7 +239,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
             required
           />
         </div>
-
         <div>
           <label htmlFor="category" className="label">
             Categoría:
@@ -283,7 +263,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           <button
             type="button"
             onClick={handleCancelEdit}
-            className="btn-primary "
+            className="btn-primary"
           >
             Cancelar Edición
           </button>
@@ -303,10 +283,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
   );
 };
 
-// Componente para mostrar la lista de productos
+// ... (El componente ProductList se mantiene igual) ...
+
 interface ProductListProps {
   products: Product[];
-  onDeleteProduct: (id: string) => void;
+  onDeleteProduct: (id: string) => Promise<void>;
   onEditProduct: (product: Product) => void;
 }
 
@@ -343,7 +324,7 @@ const ProductList: React.FC<ProductListProps> = ({
                   <span className="font-semibold">Marca:</span> {product.brand}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <span className="font-semibold">Categoría:</span>{" "}
+                  <span className="font-semibold">Categoría:</span>
                   {product.category}
                 </p>
                 <div className="mt-3">
@@ -359,7 +340,6 @@ const ProductList: React.FC<ProductListProps> = ({
                           alt={`Imagen de ${product.name} ${imgIndex + 1}`}
                           className="w-20 h-20 object-cover rounded-md border border-gray-300 transition-transform transform hover:scale-105"
                           onError={(e) => {
-                            // Manejo de errores para imágenes que no cargan
                             e.currentTarget.src = `https://placehold.co/80x80/cccccc/333333?text=No+Img`;
                             e.currentTarget.alt = "Imagen no disponible";
                           }}
@@ -394,6 +374,4 @@ const ProductList: React.FC<ProductListProps> = ({
     </div>
   );
 };
-
-// Exporta el componente principal Items como default
 export default Items;

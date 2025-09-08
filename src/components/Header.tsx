@@ -23,9 +23,11 @@ const Header: React.FC = () => {
   }, []);
 
   return (
-    <nav className="navbar bg-base-100 justify-around p-4 gap-2">
+    <nav className="navbar bg-base-100 overflow-hidden justify-around p-4 gap-2">
+      <section className="navbar navbar-top"></section>
+      <section className="navbar navbar-bottom"></section>
       {/* Left Section: Logo and Name */}
-      <section className="navbar-start">
+      <section className="navbar">
         <Link to="/">
           <img
             src="\Logo.jpg"
@@ -34,9 +36,9 @@ const Header: React.FC = () => {
           />
         </Link>
         <Link to="Dashboard">
-          <span className="font-bold max-lg:hidden text-primary p-2 rounded-lg hover:bg-primary hover:text-primary-content shadow-lg cursor-pointer">
-            Comercial Vuelvan Caras, C.A.
-          </span>
+          <button className="inline-flex bg-primary-content text-primary font-bold text-lg rounded-lg p-2 shadow-lg">
+            <p className="inline-flex">Comercial Vuelvan Caras, C.A.</p>
+          </button>
         </Link>
       </section>
 
@@ -60,40 +62,28 @@ const Header: React.FC = () => {
       </section>
 
       {/* Center Section: Management of items*/}
-      <section className="navbar-center gap-4">
-        <Link to="/Items" className="btn btn-primary lg:visible max-lg:hidden">
-          Gestion de Productos
-        </Link>
-        <Link to="/Items" className=" max-lg:visible lg:hidden btn btn-primary">
-          <GoArchive />
+      <section className="navbar gap-4">
+        <Link to="/Items">
+          <button className="btn btn-primary max-lg:visible lg:hidden">
+            <GoArchive className="inline mr-2" />
+          </button>
+          <button className="btn btn-primary max-lg:hidden lg:visible">
+            Gestión de artículos
+          </button>
         </Link>
       </section>
-      <section className="navbar-end gap-4 items-center justify-center">
-        <fieldset className="fieldset">
-          <label className="flex gap-2 cursor-pointer items-center">
-            <input
-              type="radio"
-              name="theme-radios"
-              className="radio radio-sm theme-controller"
-              value="emerald"
-            />
-            Light
-          </label>
-          <label className="flex gap-2 cursor-pointer items-center">
-            <input
-              type="radio"
-              name="theme-radios"
-              className="radio radio-sm theme-controller"
-              value="business"
-              defaultChecked
-            />
-            Dark
-          </label>
-        </fieldset>
+      <section className="navbar">
+        <div>
+          <input
+            type="checkbox"
+            className="toggle toggle-primary bg-secondary theme-controller "
+            value="emerald"
+          />
+        </div>
       </section>
 
       {/* Profiles*/}
-      <section className="navbar-end">
+      <section className="navbar">
         <div className="dropdown dropdown-end dropdown-hover">
           <div
             tabIndex={0}
@@ -122,7 +112,7 @@ const Header: React.FC = () => {
       <section className="navbar-end gap-2">
         <div>
           <Link
-            to="/Login"
+            to="/LoginUp"
             className="btn btn-primary lg:hidden max-lg:visible"
           >
             <PiSignInFill />
@@ -130,7 +120,7 @@ const Header: React.FC = () => {
         </div>
         <div>
           <Link
-            to="/Login"
+            to="/LoginUp"
             className="btn btn-primary lg:visible max-lg:hidden"
           >
             Iniciar Sesión
