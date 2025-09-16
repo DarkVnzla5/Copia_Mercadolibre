@@ -6,32 +6,31 @@ const LoginPage: React.FC = () => {
     <div className="hero min-h-screen bg-base-200">
       <div className="hero-content flex-col lg:flex-row-reverse">
         <div className="text-center lg:text-left text-primary">
-          <h1 className="text-5xl font-bold">Iniciar Sesión</h1>
+          <p className="text-5xl font-bold">Iniciar Sesión</p>
           <p className="p-2">
-            Ingresa tus credenciales para acceder a tu cuenta y comenzar a
-            disfrutar de nuestros servicios.
+            Ingresa tu e-mail o telefono para iniciar sesion
           </p>
         </div>
         <div className="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
           <form className="card-body">
             <div className="form-control">
-              <label className="label">
-                <span className="label-text">Correo Electrónico</span>
+              <label htmlFor="email">
+                <p>E-mail o telefono</p>
               </label>
               <input
                 type="email"
-                placeholder="correo@ejemplo.com"
+                id="email"
                 className="input input-bordered"
                 required
               />
             </div>
             <div className="form-control">
-              <label className="label">
-                <span className="label-text">Contraseña</span>
+              <label htmlFor="password" className="label">
+                Contraseña
               </label>
               <input
+                id="password"
                 type="password"
-                placeholder="contraseña"
                 className="input input-bordered py-4"
                 required
               />
