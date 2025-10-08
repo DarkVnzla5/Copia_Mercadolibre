@@ -1,8 +1,8 @@
-import {create} from "zustand";
-import axios from "axios";
+import { create } from 'zustand';
+import axios from 'axios';
+import { API_BASE_URL } from '../Constants/Constants';
 
-
-// Interfaz para el producto
+// Define la interfaz para un Producto
 export interface Product {
   id: string;
   name: string;
@@ -11,128 +11,92 @@ export interface Product {
   category: string;
 }
 
-// Interfaz para el estado de la tienda (Store)
-interface ItemsState {
+// Define el estado del store
+interface ItemsStore {
   products: Product[];
   isLoading: boolean;
   error: string | null;
   fetchProducts: () => Promise<void>;
   addProduct: (product: Product) => Promise<void>;
-  updateProduct: (updatedProduct: Product) => Promise<void>;
+  updateProduct: (product: Product) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
 }
 
-// Configuración de la URL base de Axios
-const api=axios.create({
-  baseURL:"http://localhost:8000/api"
-  
-}) ;
-
-// Creación de la tienda de Zustand
-export const useItemsStore = create<ItemsState>((set, get) => ({
+export const useItemsStore = create<ItemsStore>((set) => ({
   products: [],
   isLoading: false,
   error: null,
 
-  // Obtener todos los productos de la API
+  // Obtener todos los productos
   fetchProducts: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.get<Product[]>("/products");
+      const response = await axios.get(`${API_BASE_URL}/products`);
       set({ products: response.data, isLoading: false });
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        set({
-          error: `Error al cargar los productos: ${err.message}`,
-          isLoading: false,
-        });
-      } else {
-        set({
-          error: "Error desconocido al cargar los productos.",
-          isLoading: false,
-        });
-      }
-      console.error("Error en fetchProducts:", err);
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Error al cargar productos',
+        isLoading: false 
+      });
     }
   },
 
-  // Agregar un nuevo producto a la API y al estado local
-  addProduct: async (newProduct) => {
+  // Agregar un nuevo producto
+  addProduct: async (product: Product) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post<Product>("/products", newProduct);
-      set((state) => ({
+      const response = await axios.post(`${API_BASE_URL}/products`, product);
+      // Agregar el nuevo producto al estado actual
+      set(state => ({ 
         products: [...state.products, response.data],
-        isLoading: false,
+        isLoading: false 
       }));
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        set({
-          error: `Error al agregar el producto: ${err.message}`,
-          isLoading: false,
-        });
-      } else {
-        set({
-          error: "Error desconocido al agregar el producto.",
-          isLoading: false,
-        });
-      }
-      console.error("Error en addProduct:", err);
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Error al agregar producto',
+        isLoading: false 
+      });
+      throw error; // Re-lanzar el error para manejarlo en el componente
     }
   },
 
-  // Actualizar un producto existente en la API y en el estado local
-  updateProduct: async (updatedProduct) => {
+  // Actualizar un producto existente
+  updateProduct: async (product: Product) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.put<Product>(
-        `/products/${updatedProduct.id}`,
-        updatedProduct
-      );
-      set((state) => ({
-        products: state.products.map((product) =>
-          product.id === updatedProduct.id ? response.data : product
+      const response = await axios.put(`${API_BASE_URL}/products/${product.id}`, product);
+      // Actualizar el producto en el estado
+      set(state => ({
+        products: state.products.map(p => 
+          p.id === product.id ? response.data : p
         ),
-        isLoading: false,
+        isLoading: false
       }));
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        set({
-          error: `Error al actualizar el producto: ${err.message}`,
-          isLoading: false,
-        });
-      } else {
-        set({
-          error: "Error desconocido al actualizar el producto.",
-          isLoading: false,
-        });
-      }
-      console.error("Error en updateProduct:", err);
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Error al actualizar producto',
+        isLoading: false 
+      });
+      throw error; // Re-lanzar el error para manejarlo en el componente
     }
   },
 
-  // Eliminar un producto de la API y del estado local
-  deleteProduct: async (id) => {
+  // Eliminar un producto
+  deleteProduct: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
-      await api.delete(`/products/${id}`);
-      set((state) => ({
-        products: state.products.filter((product) => product.id !== id),
-        isLoading: false,
+      await axios.delete(`${API_BASE_URL}/products/${id}`);
+      // Eliminar el producto del estado
+      set(state => ({
+        products: state.products.filter(p => p.id !== id),
+        isLoading: false
       }));
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        set({
-          error: `Error al eliminar el producto: ${err.message}`,
-          isLoading: false,
-        });
-      } else {
-        set({
-          error: "Error desconocido al eliminar el producto.",
-          isLoading: false,
-        });
-      }
-      console.error("Error en deleteProduct:", err);
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Error al eliminar producto',
+        isLoading: false 
+      });
+      throw error; // Re-lanzar el error para manejarlo en el componente
     }
   },
 }));

@@ -1,132 +1,133 @@
 import React from "react";
+import { Link } from "react-router"; // Asumo react-router-dom
 import { IoPersonCircleSharp } from "react-icons/io5";
-import { Link } from "react-router";
-import { GoArchive } from "react-icons/go";
-import { PiSignInFill } from "react-icons/pi";
+import { GoArchive } from "react-icons/go"; // Añadido GoSearch
+import { PiSignInFill, PiUserPlusFill } from "react-icons/pi";
 import { GestionIcon } from "./Icons";
+import SearchBar from "./SearchBar";
 import { useDolar } from "../hooks/useDolar";
+import { BussinesName } from "../Constants/Constants";
 
 const Header: React.FC = () => {
   const { dolarData, loading, error } = useDolar();
+  const handleSearch = (query: string) => {
+    // Implement search logic here
+    console.log("Search query:", query);
+  };
+  const isLoggedIn = true;
   return (
-    <nav
-      className="navbar bg-base-100 shadow-lg flex-col items-center
-     px-4 sm-px-8 py-2 "
-    >
-      <section className="flex w-full justify-around gap-2 mb-2 flex-wrap">
-        <div className=" flex items-center">
-          <Link to="/">
-            <img
-              src="\Logo.jpg"
-              alt="Vuelvan Caras Logo"
-              className="h-20 w-30  aspect-video shadow-lg max-lg:visible lg:hidden"
-            />
-          </Link>
-          <Link to="/">
-            <button className="max-lg:hidden lg:visible inline-flex bg-primary-content text-primary font-bold text-lg rounded-lg p-2 shadow-lg">
-              Comercial Vuelvan Caras, C.A.
-            </button>
-          </Link>
-        </div>
+    <nav className="flex flex-col gap-3 p-4 bg-base-300 shadow-lg">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* --- Columna 1: Logo --- */}
         <div className="flex items-center">
-          <Link to="Dashboard">
-            <button className="btn btn-primary shadow-lg lg:visible max-lg:hidden">
-              Gestion de Empresa
-            </button>
-          </Link>
-          <Link to="Dashboard">
-            <button className="btn btn-primary text-secondary shadow-lg lg:hidden max-lg:visible">
-              <GestionIcon />
-            </button>
+          <Link to="/">
+            <button className=" btn btn-lg btn-primary">{BussinesName}</button>
           </Link>
         </div>
-        <div>
-          <div>
-            <button className="btn-primary btn">
-              {loading
-                ? "Cargando Dolar..."
-                : error
-                ? "Error al cargar Dolar"
-                : dolarData?.promedio
-                ? `Dolar Hoy: $${dolarData.promedio.toFixed(2)}`
-                : "Dolar no disponible"}
-            </button>
-          </div>
-        </div>
-      </section>
-      <section className="navbar navbar-bottom">
-        <div className=" gap-4">
-          <Link to="/Items">
-            <button className="btn btn-primary max-lg:visible lg:hidden">
-              <GoArchive className="inline mr-2" />
-            </button>
-            <button className="btn btn-primary max-lg:hidden lg:visible">
-              Gestión de artículos
-            </button>
-          </Link>
-        </div>
-        <div>
-          <div>
-            <input
-              type="checkbox"
-              className="toggle toggle-primary bg-secondary theme-controller "
-              value="emerald"
-            />
-          </div>
-        </div>
-        <div>
-          <div className="dropdown dropdown-end dropdown-hover">
-            <div
-              tabIndex={0}
-              role="button"
-              className="btn btn-primary btn-circle avatar"
-            >
-              <div className="w-10 rounded-full">
-                <IoPersonCircleSharp className="size-full " />
-              </div>
-            </div>
-            <ul
-              tabIndex={0}
-              className="menu menu-sm text-primary bg-primary-content dropdown-content rounded-box z-1 mt-3 w-52 p-2 shadow"
-            >
-              <li className="justify-between">
-                <Link to="/Profile">Perfil</Link>
-              </li>
+        <section>
+          <SearchBar onSearch={handleSearch} />
+        </section>
 
-              <li>
-                <Link to="/signOut">Cerrar sesión</Link>
-              </li>
-            </ul>
-          </div>
+        {/* --- Columna 2: Indicador Dólar + Acciones de Usuario --- */}
+        <div className="flex items-center justify-end gap-2">
+          {/* Indicador del Dólar (más discreto, opcionalmente podrías ponerlo en la fila inferior) */}
+          <span className="text-xs text-primary font-semibold mr-2 hidden sm:block">
+            {loading
+              ? "Cargando Dólar..."
+              : error
+              ? "Error al cargar Dólar"
+              : dolarData
+              ? `Dólar: ${dolarData} Bs.`
+              : "Dólar: N/A"}
+          </span>
+
+          {/* LÓGICA DE AUTENTICACIÓN: Dropdown o Botones */}
+          {isLoggedIn ? (
+            // Dropdown de Perfil (Usuario logueado)
+            <div className="dropdown dropdown-end dropdown-hover">
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn btn-primary btn-circle avatar btn-sm"
+              >
+                <div className="w-8 rounded-full">
+                  <IoPersonCircleSharp className="size-full text-white" />
+                </div>
+              </div>
+              <ul
+                tabIndex={0}
+                className="menu menu-sm bg-base-100 dropdown-content rounded-box z-[1] mt-3 w-52 p-2 shadow-lg"
+              >
+                <li>
+                  <Link to="/Profile">Perfil</Link>
+                </li>
+                <li>
+                  <Link to="/signOut">Cerrar sesión</Link>
+                </li>
+              </ul>
+            </div>
+          ) : (
+            // Botones de Iniciar Sesión / Crear Cuenta (Usuario NO logueado)
+            <div className="flex items-center gap-1">
+              <Link
+                to="/LogIn"
+                className="btn btn-primary btn-sm hidden lg:inline-flex"
+              >
+                Iniciar Sesión
+              </Link>
+              <Link
+                to="/LogIn"
+                className="btn btn-primary btn-square btn-sm lg:hidden"
+                title="Iniciar Sesión"
+              >
+                <PiSignInFill className="size-5" />
+              </Link>
+              <Link
+                to="/Signup"
+                className="btn btn-secondary btn-sm hidden lg:inline-flex"
+              >
+                Crear Cuenta
+              </Link>
+              <Link
+                to="/Signup"
+                className="btn btn-secondary btn-square btn-sm lg:hidden"
+                title="Crear Cuenta"
+              >
+                <PiUserPlusFill className="size-5" />
+              </Link>
+            </div>
+          )}
         </div>
-        <div className="navbar-end gap-2">
-          <div>
-            <Link
-              to="/LogIn"
-              className="btn btn-primary lg:hidden max-lg:visible"
-            >
-              <PiSignInFill />
-            </Link>
-          </div>
-          <div>
-            <Link
-              to="/LogIn"
-              className="btn btn-primary lg:visible max-lg:hidden"
-            >
-              Iniciar Sesión
-            </Link>
-          </div>
-          <div>
-            <Link
-              to="/Signup"
-              className="btn btn-primary lg:visible max-lg:hidden"
-            >
-              Crear Cuenta
-            </Link>
-          </div>
-        </div>
-      </section>
+      </div>
+
+      {/* --- Horizontal Line Separator --- */}
+
+      {/* ===================================== */}
+      {/* ====== FILA INFERIOR: Navegación Principal ====== */}
+      {/* ===================================== */}
+
+      <div className="flex items-center justify-between gap-4 text-sm">
+        {/* Gestión de Empresa */}
+        <Link to="/Dashboard" className="btn btn-md max-lg:btn-sm">
+          {/* **AQUÍ SE USA EL CLASSNAME CORREGIDO:** */}
+          <GestionIcon className="size-5 max-lg:visible lg:hidden" />
+          <span className=" max-lg:hidden lg:visible">Gestión de Empresa</span>
+        </Link>
+
+        {/* Gestión de Artículos */}
+        <Link to="/Items" className="btn btn-md max-lg:btn-sm">
+          <GoArchive className="size-5 max-lg:visible lg:hidden" />
+          <span className="max-lg:hidden lg:visible">Gestión de Artículos</span>
+        </Link>
+
+        {/* Aquí puedes añadir más enlaces como Ofertas, Historial, etc. */}
+
+        <Link to="/History" className="badge max-lg:badge lg:badge-lg  ">
+          Historial
+        </Link>
+      </div>
     </nav>
   );
 };
+
 export default Header;

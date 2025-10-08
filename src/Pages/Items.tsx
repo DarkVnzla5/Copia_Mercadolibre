@@ -151,7 +151,18 @@ const ProductForm: React.FC<ProductFormProps> = ({
         setMessage("¡Producto agregado exitosamente!");
       }
       setMessageType("success");
-    } catch (err) {
+
+      // Limpiar formulario después de agregar (no después de editar)
+      if (!editingProduct) {
+        setFormData({
+          id: "",
+          name: "",
+          brand: "",
+          images: "",
+          category: "",
+        });
+      }
+    } catch {
       setMessage("Hubo un error al procesar la solicitud.");
       setMessageType("error");
     }
@@ -169,12 +180,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   return (
-    <div className="card bg-base-100 shadow-xl p-8 w-full max-w-2xl border border-gray-200 gap-2">
+    <div className="card bg-base-100 shadow-xl p-8 w-full max-w-2xl border border-primary gap-2">
       <p className="text-2xl font-bold mb-6 text-center">
         {editingProduct ? "Editar Item" : "Agregar Nuevo Item"}
       </p>
       <form onSubmit={handleSubmit}>
-        <div className="card-title">
+        <div>
           <label htmlFor="id" className="label">
             Codigo:
           </label>
@@ -184,7 +195,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             name="id"
             value={formData.id}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border sm:text-sm"
+            className="mt-1 block w-full px-4 py-2 border sm:text-sm border-primary"
             placeholder="Ej: H-001"
             required
             disabled={!!editingProduct}
@@ -203,7 +214,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border sm:text-sm"
+            className="mt-1 block w-full px-4 py-2 border sm:text-sm border-primary"
             placeholder="Ej: Martillo"
             required
           />
@@ -218,25 +229,24 @@ const ProductForm: React.FC<ProductFormProps> = ({
             name="brand"
             value={formData.brand}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border rounded-md sm:text-sm"
+            className="mt-1 block w-full px-4 py-2 border rounded-md sm:text-sm border-primary"
             placeholder="Ej: Truper"
             required
           />
         </div>
         <div>
           <label htmlFor="images" className="label">
-            Imágenes (URLs separadas por comas):
+            Imágenes o Fotos:
           </label>
-          {/* CORRECCIÓN: CAMBIAR type="file" a type="text" */}
           <input
-            type="text"
+            type="file"
             id="images"
             name="images"
             value={formData.images}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border rounded-md sm:text-sm"
-            placeholder="Ej: url1.jpg, url2.png"
+            className="mt-1 block w-full px-4 py-2 border rounded-md sm:text-sm border-secondary"
             required
+            accept="image/jpg, image/png, image/gif"
           />
         </div>
         <div>
@@ -249,13 +259,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
             name="category"
             value={formData.category}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border rounded-md sm:text-sm"
+            className="mt-1 block w-full px-4 py-2 border rounded-md sm:text-sm border-primary"
             placeholder="Ej: Herramientas Manuales"
             required
           />
         </div>
 
-        <button type="submit" className="btn btn-primary w-full">
+        <button type="submit" className="btn btn-primary w-full mt-4">
           {editingProduct ? "Guardar Cambios" : "Agregar Producto"}
         </button>
 

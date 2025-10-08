@@ -1,11 +1,14 @@
 import {useState, useEffect} from 'react';
 import axios, { AxiosError } from 'axios';
+import { API_URL } from '../Constants/Constants';
 
 interface DolarData {
-  promedio: number;
-  compra: number;
-  venta: number;
+  dolarData: number|null;
+  cargando: boolean;
+  error: string|null;
 }
+
+
 export const useDolar = () => {
   const [dolarData, setDolarData] = useState<DolarData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -17,8 +20,8 @@ export const useDolar = () => {
         setLoading(true);
         setError(null);
 
-        const response = await axios.get("https://ve.dolarapi.com/v1/dolares/oficial");
-        setDolarData(response.data);
+        const response = await axios.get(API_URL);
+        setDolarData(response.data.promedio);
       } catch (err) {
         const axiosError = err as AxiosError;
         setError(axiosError.message);

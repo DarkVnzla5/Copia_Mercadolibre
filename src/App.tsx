@@ -9,6 +9,7 @@ import About from "./Pages/About.tsx";
 import LogIn from "./Pages/LogIn.tsx";
 import SignUp from "./Pages/SignUp.tsx";
 import Dashboard from "./Pages/Dashboard.tsx";
+import Details from "./Pages/Details.tsx";
 
 import "./App.css";
 
@@ -36,6 +37,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
+            <Route path="/Details/:id" element={<Details />} />
             <Route path="/Items" element={<Items />} />
             <Route path="/About" element={<About />} />
             <Route path="/Profile" element={<Profile />} />

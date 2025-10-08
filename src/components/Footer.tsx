@@ -1,9 +1,9 @@
 import React from "react";
 import { Link } from "react-router";
 
-const Footer = () => (
-  <footer className="footer footer-horizontal p-2 bg-primary-content text-primary">
-    <section className="footer footer-horizontal p-2 bg-primary-content text-primary">
+const Footer: React.FC = () => (
+  <footer className="footer footer-horizontal mt-4 p-2 bg-base-200 text-secondary">
+    <section className="footer footer-horizontal p-2 ">
       <div>
         <span className="footer-title">Compañía</span>
         <Link className="link link-hover" to="/About">
@@ -36,7 +36,7 @@ const Footer = () => (
       </div>
     </section>
 
-    <section className="footer p-2 bg-primary-content text-primary">
+    <section className="footer p-2 ">
       <div>
         <span className="footer-title">Suscríbete</span>
         <div className="form-control w-80">
@@ -46,7 +46,7 @@ const Footer = () => (
           <div className="relative">
             <input
               type="text"
-              placeholder="tu correo electrónico"
+              placeholder="Ejemplo@gmail.com"
               className="input input-bordered w-full"
             />
             <button className="btn btn-primary absolute top-0 right-0 rounded-l-none">
