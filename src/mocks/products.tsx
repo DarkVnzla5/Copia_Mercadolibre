@@ -59,7 +59,7 @@ export const products = [
   },
   {
     id: 6,
-    title: "Brocha 4",
+    title: "Brocha 4 pulgadas",
     description: "Brocha para pintar de 4 pulgadas.",
     price: 5,
     brand: "Cebra",
@@ -70,9 +70,9 @@ export const products = [
   },
   {
     id: 7,
-    title: "Brocha 2",
-    description: "Brocha para pintar de 2 pulgadas.",
-    price: 2.2,
+    title: "Brocha 1 pulgada",
+    description: "Brocha para pintar de 1 pulgadas.",
+    price: 1.7,
     brand: "Cebra",
     category: "Pintura y acabados",
     thumbnail:
