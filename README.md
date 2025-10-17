@@ -1,4 +1,7 @@
 # React + TypeScript + Vite
+# Zustand, Axios, React Router v7
+# Python, Django, DRF, PostgreSQL
+# MVC
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
