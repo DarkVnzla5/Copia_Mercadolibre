@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Chart, registerables } from "chart.js";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
+import { Outlet } from "react-router";
 
 Chart.register(...registerables);
 
@@ -46,7 +47,10 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="p-8 bg-base-200 min-h-screen">
+    <section className="p-8 bg-base-200 min-h-screen">
+      <section>
+        <Outlet />
+      </section>
       <p className="text-3xl font-bold mb-6">Panel de Control</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Sales Chart */}
@@ -140,7 +144,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

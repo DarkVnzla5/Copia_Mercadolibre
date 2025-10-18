@@ -10,6 +10,7 @@ import LogIn from "./Pages/LogIn.tsx";
 import SignUp from "./Pages/SignUp.tsx";
 import Dashboard from "./Pages/Dashboard.tsx";
 import Details from "./Pages/Details.tsx";
+import Logistics from "./Pages/Logistics.tsx";
 
 import "./App.css";
 
@@ -43,7 +44,9 @@ const App: React.FC = () => {
             <Route path="/Profile" element={<Profile />} />
             <Route path="/LogIn" element={<LogIn />} />
             <Route path="/SignUp" element={<SignUp />} />
-            <Route path="/Dashboard" element={<Dashboard />} />
+            <Route path="/Dashboard" element={<Dashboard />}>
+              <Route path="Logistics" element={<Logistics />} />
+            </Route>
           </Route>
           <Route
             path="*"

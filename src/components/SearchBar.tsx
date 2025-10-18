@@ -15,7 +15,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
       <form className="flex-grow" onSubmit={(e) => e.preventDefault()}>
         <input
           type="search"
-          className="input input-sm w-48 md:w-64 lg:w-[360px] focus:outline-none"
+          className="input input-md w-48 md:w-64 lg:w-[360px] focus:outline-none mr-6"
           placeholder="Buscar productos, marcas y más..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

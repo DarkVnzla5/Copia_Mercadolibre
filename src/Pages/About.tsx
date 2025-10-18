@@ -20,7 +20,7 @@ const About: React.FC = () => {
               Email Me
             </a>
             <a
-              href="https://github.com/your-github"
+              href="https://github.com/DarkVnzla5"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-outline w-full"

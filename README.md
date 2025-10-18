@@ -1,4 +1,4 @@
-# React + TypeScript + Vite
+# React, TypeScript, Vite
 # Zustand, Axios, React Router v7
 # Python, Django, DRF, PostgreSQL
 # MVC
