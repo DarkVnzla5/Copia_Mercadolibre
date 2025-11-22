@@ -1,9 +1,20 @@
-export const products = [
+export interface Product {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  brand: string;
+  category: string;
+  thumbnail: string;
+  images: string[];
+}
+
+export const products: Product[] = [
   {
     id: 1,
     title: "Pintura Esmalte 1/4 Galón  Colores Varios Mate y Brillante",
     description: "Pintura uso general para herreria.",
-    price: 13,
+    price: 11,
     brand: "Cebra",
     category: "Pintura y acabados",
     thumbnail:
@@ -14,7 +25,7 @@ export const products = [
     id: 2,
     title: "Pintura Esmalte Galon  Colores Varios Mate y Brillante",
     description: "Pintura uso general.",
-    price: 41,
+    price: 38,
     brand: "Cebra",
     category: "Pintura y acabados",
     thumbnail:
@@ -25,7 +36,7 @@ export const products = [
     id: 3,
     title: "Pintura Caucho Galon Colores Varios",
     description: "Pintura para Interiores",
-    price: 15,
+    price: 12,
     brand: "Cebra",
     category: "Pintura y acabados",
     thumbnail:
@@ -36,7 +47,7 @@ export const products = [
     id: 4,
     title: "Pintura Caucho 2 Galones Colores Varios",
     description: "Pintura para Interiores",
-    price: 25,
+    price: 22,
     brand: "Cebra",
     category: "Pintura y acabados",
     thumbnail:
@@ -47,7 +58,7 @@ export const products = [
     id: 5,
     title: "Pintura Caucho 4 Galones Colores Varios",
     description: "Pintura para Interiores",
-    price: 47,
+    price: 42,
     brand: "Cebra",
     category: "Pintura y acabados",
     thumbnail:
@@ -61,7 +72,7 @@ export const products = [
     id: 6,
     title: "Brocha 4 pulgadas",
     description: "Brocha para pintar de 4 pulgadas.",
-    price: 5,
+    price: 6,
     brand: "Cebra",
     category: "Pintura y acabados",
     thumbnail:
@@ -72,7 +83,7 @@ export const products = [
     id: 7,
     title: "Brocha 1 pulgada",
     description: "Brocha para pintar de 1 pulgadas.",
-    price: 1.7,
+    price: 2.2,
     brand: "Cebra",
     category: "Pintura y acabados",
     thumbnail:

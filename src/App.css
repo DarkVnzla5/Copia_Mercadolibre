@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @plugin "daisyui"{
-  themes: light, dark --default, "VuelvanC", "VuelvanLight";
+  themes: "VuelvanC" --default, "VuelvanLight" --ligth;
 
 }
 @plugin "daisyui/theme" {

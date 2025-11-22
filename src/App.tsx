@@ -11,7 +11,7 @@ import SignUp from "./Pages/SignUp.tsx";
 import Dashboard from "./Pages/Dashboard.tsx";
 import Details from "./Pages/Details.tsx";
 import Logistics from "./Pages/Logistics.tsx";
-
+import Pedidos from "./Pages/Pedidos.tsx";
 import "./App.css";
 
 const App: React.FC = () => {
@@ -38,8 +38,9 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
-            <Route path="/Details/:id" element={<Details />} />
+            <Route path="Details/:id" element={<Details />} />
             <Route path="/Items" element={<Items />} />
+            <Route path="/Pedidos" element={<Pedidos />} />
             <Route path="/About" element={<About />} />
             <Route path="/Profile" element={<Profile />} />
             <Route path="/LogIn" element={<LogIn />} />
@@ -51,8 +52,8 @@ const App: React.FC = () => {
           <Route
             path="*"
             element={
-              <div className="text-center text-2xl text-red-500">
-                Page Not Found
+              <div className="text-center text-2xl text-error ">
+                Error 404: Página no encontrada
               </div>
             }
           />

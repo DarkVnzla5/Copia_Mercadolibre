@@ -1,7 +1,7 @@
 import React from "react";
-import { Link } from "react-router"; // Asumo react-router-dom
+import { Link } from "react-router";
 import { IoPersonCircleSharp } from "react-icons/io5";
-import { GoArchive } from "react-icons/go"; // Añadido GoSearch
+import { GoArchive } from "react-icons/go";
 import { PiSignInFill, PiUserPlusFill } from "react-icons/pi";
 import { GestionIcon } from "./Icons";
 import SearchBar from "./SearchBar";
@@ -9,14 +9,14 @@ import { useDolar } from "../hooks/useDolar";
 import { BussinesName } from "../Constants/Constants";
 
 const Header: React.FC = () => {
-  const { dolarData, loading, error } = useDolar();
+  const { dolarData } = useDolar();
   const handleSearch = (query: string) => {
     // Implement search logic here
     console.log("Search query:", query);
   };
   const isLoggedIn = true;
   return (
-    <nav className="flex flex-col gap-3 p-4 bg-base-300 shadow-lg">
+    <nav className="flex flex-col gap-3 p-4 bg-base-100 shadow-lg">
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* --- Columna 1: Logo --- */}
         <div className="flex items-center">
@@ -31,14 +31,8 @@ const Header: React.FC = () => {
         {/* --- Columna 2: Indicador Dólar + Acciones de Usuario --- */}
         <div className="flex items-center justify-end gap-2">
           {/* Indicador del Dólar (más discreto, opcionalmente podrías ponerlo en la fila inferior) */}
-          <span className="text-xs text-primary font-semibold mr-2 hidden sm:block">
-            {loading
-              ? "Cargando Dólar..."
-              : error
-              ? "Error al cargar Dólar"
-              : dolarData
-              ? `Dólar: ${dolarData} Bs.`
-              : "Dólar: N/A"}
+          <span className=" btn btn-primary btn-md font-bold">
+            {dolarData ? `${Number(dolarData).toFixed(2)} Bs.` : "Bs. N/A"}
           </span>
 
           {/* LÓGICA DE AUTENTICACIÓN: Dropdown o Botones */}
@@ -51,7 +45,7 @@ const Header: React.FC = () => {
                 className="btn btn-primary btn-circle avatar btn-sm"
               >
                 <div className="w-8 rounded-full">
-                  <IoPersonCircleSharp className="size-full text-white" />
+                  <IoPersonCircleSharp className="size-full text-secondary" />
                 </div>
               </div>
               <ul
@@ -113,6 +107,9 @@ const Header: React.FC = () => {
           <GestionIcon className="size-5 max-lg:visible lg:hidden" />
           <span className=" max-lg:hidden lg:visible">Gestión de Empresa</span>
         </Link>
+        <Link to="/Pedidos" className="btn btn-md  max-lg:btn-sm">
+          Pedidos y Presupuestos
+        </Link>
 
         {/* Gestión de Artículos */}
         <Link to="/Items" className="btn btn-md max-lg:btn-sm">
@@ -121,10 +118,6 @@ const Header: React.FC = () => {
         </Link>
 
         {/* Aquí puedes añadir más enlaces como Ofertas, Historial, etc. */}
-
-        <Link to="/History" className="badge max-lg:badge lg:badge-lg  ">
-          Historial
-        </Link>
       </div>
     </nav>
   );

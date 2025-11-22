@@ -1,6 +1,6 @@
-import { useState, React } from "react";
+import React, { useState } from "react";
 
-function Configuration() {
+const Configuration: React.FC = () => {
   const [theme, setTheme] = useState("abyss");
   const handleThemeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedTheme = e.target.value;
@@ -107,5 +107,5 @@ function Configuration() {
       </section>
     </article>
   );
-}
+};
 export default Configuration;
