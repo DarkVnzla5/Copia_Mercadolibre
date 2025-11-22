@@ -2,6 +2,7 @@
 # Zustand, Axios, React Router v7
 # Python, Django, DRF, PostgreSQL
 # MVC
+# Using a Template like a (https://MercadoLibre.com.ve) or better (https://amazon.ca )
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
