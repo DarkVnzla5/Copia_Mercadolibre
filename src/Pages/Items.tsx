@@ -1,36 +1,38 @@
 import React, { useState, useEffect } from "react";
-import { useItemsStore } from "../stores/itemsStore"; // Importa el store de Zustand
-
-// Define la interfaz para un Producto
-interface Product {
-  id: string;
-  name: string;
-  brand: string;
-  images: string[];
-  category: string;
-}
+import type { Product } from "../hooks/useProducts";
+import { useProducts } from "../hooks/useProducts";
 
 // Componente principal Items.tsx
 function Items() {
-  // Ahora usamos el store de Zustand
   const {
     products,
-    fetchProducts,
-    deleteProduct,
-    updateProduct,
-    addProduct,
     isLoading,
+    isError,
     error,
-  } = useItemsStore();
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    addProduct,
+    updateProduct,
+    deleteProduct,
+  } = useProducts();
 
-  // Llamada a la API al montar el componente
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const startEditing = (product: Product) => {
     setEditingProduct(product);
+  };
+
+  const handleAddProduct = async (product: Product) => {
+    await addProduct(product);
+  };
+
+  const handleUpdateProduct = async (product: Product) => {
+    await updateProduct(product);
+    setEditingProduct(null);
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (window.confirm("¿Estás seguro de que deseas eliminar este producto?")) {
+      await deleteProduct(id);
+    }
   };
 
   return (
@@ -39,19 +41,19 @@ function Items() {
         🔧 Gestor de Productos 🛠️
       </p>
 
-      {/* Muestra mensajes de carga o error del store */}
+      {/* Muestra mensajes de carga o error del hook */}
       {isLoading && <p>Cargando productos...</p>}
-      {error && <p className="text-red-500">{error}</p>}
+      {isError && <p className="text-red-500">{(error as Error)?.message || "Error al cargar productos"}</p>}
 
       <ProductForm
-        onAddProduct={addProduct}
-        onUpdateProduct={updateProduct}
+        onAddProduct={handleAddProduct}
+        onUpdateProduct={handleUpdateProduct}
         editingProduct={editingProduct}
         setEditingProduct={setEditingProduct}
       />
       <ProductList
         products={products}
-        onDeleteProduct={deleteProduct}
+        onDeleteProduct={handleDeleteProduct}
         onEditProduct={startEditing}
       />
     </div>
@@ -79,6 +81,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     brand: "",
     images: "",
     category: "",
+    price: 0,
   });
 
   const [message, setMessage] = useState("");
@@ -92,6 +95,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         brand: editingProduct.brand,
         images: editingProduct.images.join(", "),
         category: editingProduct.category,
+        price: editingProduct.price || 0,
       });
       setMessage("");
       setMessageType("");
@@ -102,6 +106,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         brand: "",
         images: "",
         category: "",
+        price: 0,
       });
     }
   }, [editingProduct]);
@@ -140,6 +145,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         .map((img) => img.trim())
         .filter((img) => img !== ""),
       category: formData.category,
+      price: Number(formData.price),
     };
 
     try {
@@ -160,6 +166,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           brand: "",
           images: "",
           category: "",
+          price: 0,
         });
       }
     } catch {
@@ -281,9 +288,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
         {message && (
           <div
-            className={`mt-4 p-3 rounded-md text-center text-sm ${
-              messageType === "success" ? "btn-success" : "btn-error"
-            }`}
+            className={`mt-4 p-3 rounded-md text-center text-sm ${messageType === "success" ? "btn-success" : "btn-error"
+              }`}
           >
             {message}
           </div>

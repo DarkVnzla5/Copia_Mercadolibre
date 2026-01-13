@@ -2,11 +2,12 @@ import React from "react";
 import { Link } from "react-router";
 import { IoPersonCircleSharp } from "react-icons/io5";
 import { GoArchive } from "react-icons/go";
-import { PiSignInFill, PiUserPlusFill } from "react-icons/pi";
+import { PiSignInFill, PiUserPlusFill, PiShoppingCartFill } from "react-icons/pi";
 import { GestionIcon } from "./Icons";
 import SearchBar from "./SearchBar";
 import { useDolar } from "../hooks/useDolar";
 import { BussinesName } from "../Constants/Constants";
+import DeliveryModal from "./Buttons";
 
 const Header: React.FC = () => {
   const { dolarData } = useDolar();
@@ -16,14 +17,21 @@ const Header: React.FC = () => {
   };
   const isLoggedIn = true;
   return (
-    <nav className="flex flex-col gap-3 p-4 bg-base-100 shadow-lg">
+    <nav className="flex flex-col gap-3 p-4 bg-base-200 shadow-lg">
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* --- Columna 1: Logo --- */}
-        <div className="flex items-center">
-          <Link to="/">
-            <button className=" btn btn-lg btn-primary">{BussinesName}</button>
-          </Link>
-        </div>
+        <section>
+          <div className="flex items-center">
+            <Link to="/">
+              <button className=" btn btn-lg btn-primary">
+                {BussinesName}
+              </button>
+            </Link>
+          </div>
+        </section>
+        <section>
+          <DeliveryModal />
+        </section>
         <section>
           <SearchBar onSearch={handleSearch} />
         </section>
@@ -91,6 +99,9 @@ const Header: React.FC = () => {
               </Link>
             </div>
           )}
+          <Link to="/cart" className="btn btn-ghost btn-circle">
+            <PiShoppingCartFill className="size-6" />
+          </Link>
         </div>
       </div>
 

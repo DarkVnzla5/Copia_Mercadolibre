@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { GoSearch } from "react-icons/go";
 
+
 interface SearchBarProps {
   onSearch: (searchTerm: string) => void;
 }
@@ -21,7 +22,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              e.preventDefault(); // Evita el envío del formulario
               handleSearch();
             }
           }}

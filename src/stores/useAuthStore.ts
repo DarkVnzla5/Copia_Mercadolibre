@@ -1,15 +1,14 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import api from "../services/Api";
 
 // 1. Define la interfaz para el objeto de usuario
 interface User {
   id: string;
   email: string;
-  name?: string; // El nombre es opcional
-  // Añade aquí cualquier otra propiedad del usuario que tu backend devuelva
+  name?: string;
 }
 
-//Define la interfaz para el estado de autenticación
+// Define la interfaz para el estado de autenticación
 interface AuthState {
   user: User | null;
   isLoading: boolean;
@@ -17,45 +16,36 @@ interface AuthState {
   login: (email: string, password: string) => Promise<boolean>;
   signup: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => void;
-  updateUser: (data: Partial<User>) => Promise<boolean>; // 'Partial<User>' permite actualizar solo algunas propiedades
+  updateUser: (data: Partial<User>) => Promise<boolean>;
 }
 
-// Configuración de Axios para tu API
-const api = axios.create({
-  baseURL: 'http://localhost:3000/api', // Reemplaza con la URL de tu backend
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-export const useAuthStore = create<AuthState>((set, get) => ({ // Añadimos 'get' para acceder al estado actual
-  user: null, // Objeto de usuario si está logeado, null si no
-  isLoading: false, // Para manejar el estado de carga
-  error: null, // Para manejar errores
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user: JSON.parse(localStorage.getItem("user") || "null"),
+  isLoading: false,
+  error: null,
 
   // Función para iniciar sesión
   login: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
-      // Realiza la llamada POST a tu endpoint de login
-      const response = await api.post<User>('/login', { email, password }); // Especifica el tipo de respuesta esperada
-      const userData = response.data; // Asume que el backend devuelve los datos del usuario
+      const response = await api.post<User>('/login', { email, password });
+      const userData = response.data;
 
       if (userData) {
         set({ user: userData, isLoading: false });
-        // Aquí podrías guardar un token de autenticación si tu API lo devuelve
-        // Por ejemplo: localStorage.setItem('authToken', userData.token);
-        return true; // Éxito
+        // El interceptor en Api.ts espera 'authtoken'
+        // localStorage.setItem('authtoken', userData.token); // Asumiendo que el backend devuelve un token
+        localStorage.setItem('user', JSON.stringify(userData));
+        return true;
       } else {
-        // En caso de que la API devuelva una respuesta exitosa pero sin datos de usuario (poco probable)
         set({ error: 'Credenciales inválidas', isLoading: false });
-        return false; // Fallo
+        return false;
       }
-    } catch (err: any) { // 'any' puede ser más específico si conoces la estructura del error de Axios
-      // Manejo de errores de Axios
-      const errorMessage = err.response?.data?.message || 'Error al iniciar sesión';
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const errorMessage = (err as any).response?.data?.message || 'Error al iniciar sesión';
       set({ error: errorMessage, isLoading: false });
-      return false; // Fallo
+      return false;
     }
   },
 
@@ -63,68 +53,64 @@ export const useAuthStore = create<AuthState>((set, get) => ({ // Añadimos 'get
   signup: async (email, password, name) => {
     set({ isLoading: true, error: null });
     try {
-      // Realiza la llamada POST a tu endpoint de registro
-      const response = await api.post<User>('/signup', { email, password, name }); // Especifica el tipo de respuesta esperada
-      const newUser = response.data; // Asume que el backend devuelve los datos del nuevo usuario
+      const response = await api.post<User>('/signup', { email, password, name });
+      const newUser = response.data;
 
       if (newUser) {
         set({ user: newUser, isLoading: false });
-        // Aquí podrías guardar un token de autenticación si tu API lo devuelve
-        // Por ejemplo: localStorage.setItem('authToken', newUser.token);
-        return true; // Éxito
+        localStorage.setItem('user', JSON.stringify(newUser));
+        return true;
       } else {
         set({ error: 'Error al registrarse', isLoading: false });
-        return false; // Fallo
+        return false;
       }
-    } catch (err: any) {
-      // Manejo de errores de Axios
-      const errorMessage = err.response?.data?.message || 'Error al registrarse';
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const errorMessage = (err as any).response?.data?.message || 'Error al registrarse';
       set({ error: errorMessage, isLoading: false });
-      return false; // Fallo
+      return false;
     }
   },
 
   // Función para cerrar sesión
   logout: () => {
     set({ user: null, error: null });
-    // Aquí también deberías eliminar cualquier token de autenticación
-    // Por ejemplo: localStorage.removeItem('authToken');
+    localStorage.removeItem('authtoken');
+    localStorage.removeItem('user');
   },
 
   // Función para modificar el perfil del usuario
   updateUser: async (data) => {
     set({ isLoading: true, error: null });
     try {
-      // Asegúrate de que haya un usuario logeado para actualizar
-      const currentUser = get().user; // Usamos 'get()' para acceder al estado actual
+      const currentUser = get().user;
       if (!currentUser) {
         set({ error: 'No hay usuario autenticado para actualizar', isLoading: false });
         return false;
       }
 
-      // Si tu API requiere un token de autenticación en los headers
-      // const authToken = localStorage.getItem('authToken');
-      // api.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
-
-      // Realiza la llamada PUT/PATCH a tu endpoint de actualización de perfil
-      const response = await api.put<User>(`/users/${currentUser.id}`, data); // O patch, dependiendo de tu API
-      const updatedUser = response.data; // Asume que el backend devuelve los datos actualizados del usuario
+      const response = await api.put<User>(`/users/${currentUser.id}`, data);
+      const updatedUser = response.data;
 
       if (updatedUser) {
-        set((state) => ({
-          user: { ...state.user, ...updatedUser }, // Fusionar datos actualizados con el usuario existente
-          isLoading: false,
-        }));
-        return true; // Éxito
+        set((state) => {
+          const newUser = { ...state.user, ...updatedUser } as User;
+          localStorage.setItem('user', JSON.stringify(newUser));
+          return {
+            user: newUser,
+            isLoading: false,
+          };
+        });
+        return true;
       } else {
         set({ error: 'Error al actualizar el perfil', isLoading: false });
-        return false; // Fallo
+        return false;
       }
-    } catch (err: any) {
-      // Manejo de errores de Axios
-      const errorMessage = err.response?.data?.message || 'Error al actualizar el perfil';
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const errorMessage = (err as any).response?.data?.message || 'Error al actualizar el perfil';
       set({ error: errorMessage, isLoading: false });
-      return false; // Fallo
+      return false;
     }
   },
 }));

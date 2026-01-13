@@ -1,13 +1,14 @@
-import axios from "axios";
-import API_BASE_URL from "../Constants/Constants";
+import axios, { type AxiosInstance } from "axios";
+export const API_BASE_URL = 'http://localhost:8000/api';
 
-const api = axios.create({
+const api:AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000, // Set a timeout of 10 seconds
   headers: {
     "Content-Type": "application/json",
   },
 });
+
 api.interceptors.request.use(
   (config) => {
     // You can add any request interceptors here
@@ -25,14 +26,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 404) {
       // Token expirado o inválido - logout
       localStorage.removeItem("authToken");
       localStorage.removeItem("user");
       window.location.href = "/login";
     }
 
-    if (error.response?.status === 500) {
+    if (error.response?.status === 505) {
       console.error("Error del servidor:", error);
     }
 

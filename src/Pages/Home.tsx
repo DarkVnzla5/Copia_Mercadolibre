@@ -3,7 +3,7 @@ import Products from "../components/Products";
 import Filters from "../components/Filters";
 import { IoIosSearch, IoMdClose } from "react-icons/io";
 
-// import { useProductStore } from "../stores/itemsStore"; // Importamos el store
+
 
 const Home: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);

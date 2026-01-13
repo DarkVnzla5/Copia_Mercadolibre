@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router";
-import { products, type Product } from "../mocks/products";
+import type { Product } from "../hooks/useProducts";
+import { useProducts } from "../hooks/useProducts";
 import { useDolar } from "../hooks/useDolar";
 import { useFilterStore } from "../stores/useFilterStore";
 
@@ -9,12 +10,15 @@ const useFilteredProducts = (allProducts: Product[]) => {
 
   const filteredProducts = useMemo(() => {
     return allProducts.filter((product) => {
+      // Note: The mock had 'price', backend 'Product' might need it too or we map it.
+      // Assuming for now the backend Product has price or we use a fallback.
+      const productPrice = product.price || 0;
       const categoryMatch =
         selectedCategory === "Todo" || product.category === selectedCategory;
       const minPriceMatch =
-        minPrice === null || minPrice <= 0 || product.price >= minPrice;
+        minPrice === null || minPrice <= 0 || productPrice >= minPrice;
       const maxPriceMatch =
-        maxPrice === null || maxPrice <= 0 || product.price <= maxPrice;
+        maxPrice === null || maxPrice <= 0 || productPrice <= maxPrice;
       return categoryMatch && minPriceMatch && maxPriceMatch;
     });
   }, [allProducts, minPrice, maxPrice, selectedCategory]);
@@ -23,7 +27,11 @@ const useFilteredProducts = (allProducts: Product[]) => {
 
 const Products: React.FC = () => {
   const { dolarData } = useDolar();
-  const filteredProducts = useFilteredProducts(products);
+  const { products: allProducts, isLoading, isError } = useProducts();
+  const filteredProducts = useFilteredProducts(allProducts);
+
+  if (isLoading) return <div className="p-4 text-center">Cargando productos...</div>;
+  if (isError) return <div className="p-4 text-center text-red-500">Error al cargar productos</div>;
 
   return (
     <section className="flex-grow p-4">
@@ -56,8 +64,8 @@ const Products: React.FC = () => {
               */}
                 <figure className="relative w-full aspect-square overflow-hidden">
                   <img
-                    src={product.thumbnail}
-                    alt={product.title}
+                    src={product.thumbnail || product.images[0]}
+                    alt={product.title || product.name}
                     // w-full h-full object-cover: Asegura que la imagen llene el espacio cuadrado
                     // sin distorsionarse (la imagen se recorta si es necesario).
                     className="w-3/4 h-3/4 object-cover 
@@ -71,17 +79,17 @@ const Products: React.FC = () => {
                   {/* Título: Usa 'line-clamp-2' para limitar a 2 líneas y evitar que tarjetas 
                     con títulos largos sean más altas que otras. */}
                   <p className="card-title text-secondary  line-clamp-2 min-h-10">
-                    {product.title}
+                    {product.title || product.name}
                   </p>
 
                   {/* Precio: Destacado */}
                   <div className="text-xl font-bold text-secondary mt-2">
-                    <p>{product.price.toFixed(2)} $</p>
+                    <p>{(product.price || 0).toFixed(2)} $</p>
                     <p>
                       {dolarData
-                        ? `${(product.price * Number(dolarData)).toFixed(
-                            2
-                          )} Bs.`
+                        ? `${((product.price || 0) * Number(dolarData)).toFixed(
+                          2
+                        )} Bs.`
                         : "Bs. N/A"}
                     </p>
                   </div>

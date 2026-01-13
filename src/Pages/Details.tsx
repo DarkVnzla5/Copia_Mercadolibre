@@ -1,49 +1,71 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router";
-
-interface ItemDetails {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  imageUrl: string;
-  brand: string;
-}
+import { useProduct } from "../hooks/useProducts";
+import { useCart } from "../hooks/useCart";
 
 const Details: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [item, setItem] = useState<ItemDetails | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const { data: item, isLoading, isError, error } = useProduct(id || "");
+  const { addItem, isActionsLoading } = useCart();
+  const [isAdding, setIsAdding] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      setLoading(true);
-      fetch("API_URL/products/${id}")
-        .then((res) => res.json())
-        .then((data: ItemDetails) => {
-          setItem(data);
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.error("Error fetching item details:", err);
-          setLoading(false);
-        });
+  const handleAddToCart = async () => {
+    if (!item) return;
+    try {
+      setIsAdding(true);
+      await addItem({ productId: item.id, quantity: 1 });
+      alert("Producto añadido al carrito");
+    } catch (e) {
+      console.error("Error adding to cart", e);
+      alert("Error al añadir al carrito");
+    } finally {
+      setIsAdding(false);
     }
-  }, [id]);
+  };
 
-  if (loading) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return <div className="p-10 text-center">Cargando detalles...</div>;
   }
+
+  if (isError) {
+    return <div className="p-10 text-center text-error">Error: {(error as Error)?.message}</div>;
+  }
+
   if (!item) {
-    return <div>Item not found</div>;
+    return <div className="p-10 text-center">Producto no encontrado</div>;
   }
 
   return (
-    <section>
-      <div>
-        <p>Items Detail</p>
-        <p>{}</p>
-        <p></p>
+    <section className="min-h-screen bg-base-200 p-8">
+      <div className="max-w-4xl mx-auto card lg:card-side bg-base-100 shadow-xl">
+        <figure className="lg:w-1/2 p-4">
+          <img
+            src={item.thumbnail || item.images[0]}
+            alt={item.title || item.name}
+            className="rounded-xl w-full h-auto object-cover aspect-square"
+          />
+        </figure>
+        <div className="card-body lg:w-1/2">
+          <h2 className="card-title text-3xl font-bold text-primary">
+            {item.title || item.name}
+          </h2>
+          <p className="text-xl font-bold text-secondary">
+            {item.price.toFixed(2)} $
+          </p>
+          <div className="badge badge-outline">{item.category}</div>
+          <p className="mt-4 text-base-content/80">
+            {item.description || "Sin descripción disponible."}
+          </p>
+          <div className="card-actions justify-end mt-6">
+            <button
+              className="btn btn-primary"
+              onClick={handleAddToCart}
+              disabled={isActionsLoading || isAdding}
+            >
+              {isAdding ? "Añadiendo..." : "Añadir al Carrito"}
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -12,6 +12,7 @@ import Dashboard from "./Pages/Dashboard.tsx";
 import Details from "./Pages/Details.tsx";
 import Logistics from "./Pages/Logistics.tsx";
 import Pedidos from "./Pages/Pedidos.tsx";
+import Cart from "./Pages/Cart.tsx";
 import "./App.css";
 
 const App: React.FC = () => {
@@ -38,8 +39,9 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
-            <Route path="Details/:id" element={<Details />} />
+            <Route path="products/:id" element={<Details />} />
             <Route path="/Items" element={<Items />} />
+            <Route path="/cart" element={<Cart />} />
             <Route path="/Pedidos" element={<Pedidos />} />
             <Route path="/About" element={<About />} />
             <Route path="/Profile" element={<Profile />} />

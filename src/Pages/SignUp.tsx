@@ -5,9 +5,8 @@ const SignUpPage: React.FC = () => {
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
     const [name, setName] = React.useState("");
-    const signUp = useAuthStore((state) => state.signUp);
+    const signUp = useAuthStore((state) => state.signup);
     const user = useAuthStore((state) => state.user);
-    const isLoading = useAuthStore((state) => state.isLoading);
     const error = useAuthStore((state) => state.error);
 
     const handleSubmit = async (e: React.FormEvent) => {

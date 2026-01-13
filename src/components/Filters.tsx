@@ -3,9 +3,9 @@ import { useFilterStore } from "../stores/useFilterStore";
 
 const categories = [
   "Todo",
-  "Herramientas Eléctricas",
-  "Herramientas Manuales",
-  "Pintura y Acabados",
+  "Herramientas eléctricas",
+  "Herramientas manuales",
+  "Pintura y acabados",
   "Mobiliario de Taller",
   "Plomería y Electricidad",
   "Protección Personal",
