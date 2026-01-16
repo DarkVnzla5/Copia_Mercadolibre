@@ -1,24 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useAuthStore } from "../stores/useAuthStore";
 
 interface UserProfile {
   name: string;
   email: string;
-  phone: string;
-  address: string;
+  phone?: string;
+  address?: string;
 }
 
-const initialProfile: UserProfile = {
-  name: "",
-  email: "",
-  phone: "",
-  address: "",
-};
-
 const Profile: React.FC = () => {
-  const [profile, setProfile] = useState<UserProfile>(initialProfile);
+  const { user, updateUser, isLoading, error } = useAuthStore();
+  const [profile, setProfile] = useState<UserProfile>({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: "",
+    address: "",
+  });
   const [editing, setEditing] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      setProfile((prev) => ({
+        ...prev,
+        name: user.name || "",
+        email: user.email || "",
+      }));
+    }
+  }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -28,23 +38,49 @@ const Profile: React.FC = () => {
 
   const handleCancel = () => {
     setEditing(false);
-    // Optionally reset to initialProfile or fetch from API
+    if (user) {
+      setProfile({
+        name: user.name || "",
+        email: user.email || "",
+        phone: "",
+        address: "",
+      });
+    }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Save logic here (API call)
-    setEditing(false);
-    // Optionally show a success message
+    const success = await updateUser(profile);
+    if (success) {
+      setEditing(false);
+    }
   };
+
+  if (!user) {
+    return (
+      <div className="hero min-h-screen bg-base-200">
+        <div className="hero-content text-center">
+          <div className="max-w-md">
+            <h1 className="text-2xl font-bold text-error">No has iniciado sesión</h1>
+            <button className="btn btn-primary mt-4" onClick={() => navigate("/LogIn")}>Ir a Iniciar Sesión</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-base-200 rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-4">Profile</h2>
+    <div className="max-w-lg mx-auto mt-10 p-8 bg-base-100 rounded-2xl shadow-xl">
+      <h2 className="text-3xl font-bold mb-6 text-primary">Mi Perfil</h2>
+      {error && (
+        <div className="alert alert-error mb-4">
+          <span>{error}</span>
+        </div>
+      )}
       <form onSubmit={handleSave} className="space-y-4">
-        <div>
+        <div className="form-control">
           <label className="label">
-            <span className="label-text">Name</span>
+            <span className="label-text font-semibold">Nombre</span>
           </label>
           <input
             type="text"
@@ -56,9 +92,9 @@ const Profile: React.FC = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-control">
           <label className="label">
-            <span className="label-text">Email</span>
+            <span className="label-text font-semibold">Correo Electrónico</span>
           </label>
           <input
             type="email"
@@ -70,9 +106,9 @@ const Profile: React.FC = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-control">
           <label className="label">
-            <span className="label-text">Phone</span>
+            <span className="label-text font-semibold">Teléfono</span>
           </label>
           <input
             type="tel"
@@ -81,12 +117,11 @@ const Profile: React.FC = () => {
             value={profile.phone}
             onChange={handleChange}
             disabled={!editing}
-            required
           />
         </div>
-        <div>
+        <div className="form-control">
           <label className="label">
-            <span className="label-text">Address</span>
+            <span className="label-text font-semibold">Dirección</span>
           </label>
           <input
             type="text"
@@ -95,38 +130,38 @@ const Profile: React.FC = () => {
             value={profile.address}
             onChange={handleChange}
             disabled={!editing}
-            required
           />
         </div>
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-4 mt-8">
           {editing ? (
             <>
-              <button type="submit" className="btn btn-primary">
-                Save
+              <button type="submit" className="btn btn-primary flex-1" disabled={isLoading}>
+                {isLoading ? <span className="loading loading-spinner"></span> : "Guardar Cambios"}
               </button>
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="btn btn-ghost"
                 onClick={handleCancel}
+                disabled={isLoading}
               >
-                Cancel
+                Cancelar
               </button>
             </>
           ) : (
             <>
               <button
                 type="button"
-                className="btn btn-accent"
+                className="btn btn-primary flex-1"
                 onClick={handleEdit}
               >
-                Edit
+                Editar Perfil
               </button>
               <button
                 type="button"
-                className="btn"
+                className="btn btn-ghost"
                 onClick={() => navigate(-1)}
               >
-                Back
+                Volver
               </button>
             </>
           )}
@@ -137,3 +172,4 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
+

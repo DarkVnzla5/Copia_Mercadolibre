@@ -1,7 +1,21 @@
-import React from "react";
-import { Link } from "react-router";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { useAuthStore } from "../stores/useAuthStore";
 
 const LoginPage: React.FC = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const { login, isLoading, error } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const success = await login(email, password);
+    if (success) {
+      navigate("/");
+    }
+  };
+
   return (
     <div className="hero min-h-screen bg-base-200">
       <div className="hero-content flex-col lg:flex-row-reverse">
@@ -12,7 +26,12 @@ const LoginPage: React.FC = () => {
           </p>
         </div>
         <div className="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-          <form className="card-body">
+          <form className="card-body" onSubmit={handleSubmit}>
+            {error && (
+              <div className="alert alert-error mb-4">
+                <span>{error}</span>
+              </div>
+            )}
             <div className="form-control">
               <label htmlFor="email">
                 <p>E-mail o telefono</p>
@@ -21,6 +40,8 @@ const LoginPage: React.FC = () => {
                 type="email"
                 id="email"
                 className="input input-bordered"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -32,6 +53,8 @@ const LoginPage: React.FC = () => {
                 id="password"
                 type="password"
                 className="input input-bordered py-4"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <label className="label">
@@ -41,7 +64,9 @@ const LoginPage: React.FC = () => {
               </label>
             </div>
             <div className="form-control mt-6">
-              <button className="btn btn-primary">Iniciar Sesión</button>
+              <button className="btn btn-primary" disabled={isLoading}>
+                {isLoading ? <span className="loading loading-spinner"></span> : "Iniciar Sesión"}
+              </button>
             </div>
           </form>
         </div>
@@ -49,5 +74,6 @@ const LoginPage: React.FC = () => {
     </div>
   );
 };
+
 
 export default LoginPage;

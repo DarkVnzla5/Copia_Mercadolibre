@@ -8,14 +8,21 @@ import SearchBar from "./SearchBar";
 import { useDolar } from "../hooks/useDolar";
 import { BussinesName } from "../Constants/Constants";
 import DeliveryModal from "./Buttons";
+import { useAuthStore } from "../stores/useAuthStore";
+
 
 const Header: React.FC = () => {
   const { dolarData } = useDolar();
+  const { user, logout } = useAuthStore();
+  const [isProfileOpen, setIsProfileOpen] = React.useState(false);
+
   const handleSearch = (query: string) => {
     // Implement search logic here
     console.log("Search query:", query);
   };
-  const isLoggedIn = true;
+
+  const isLoggedIn = !!user?.id;
+
   return (
     <nav className="flex flex-col gap-3 p-4 bg-base-200 shadow-lg">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -43,31 +50,72 @@ const Header: React.FC = () => {
             {dolarData ? `${Number(dolarData).toFixed(2)} Bs.` : "Bs. N/A"}
           </span>
 
-          {/* LÓGICA DE AUTENTICACIÓN: Dropdown o Botones */}
+          {/* LÓGICA DE AUTENTICACIÓN: Modal de Perfil o Botones de Login */}
           {isLoggedIn ? (
-            // Dropdown de Perfil (Usuario logueado)
-            <div className="dropdown dropdown-end dropdown-hover">
-              <div
-                tabIndex={0}
-                role="button"
+            <>
+              {/* Botón de Perfil que abre el Modal */}
+              <button
                 className="btn btn-primary btn-circle avatar btn-sm"
+                onClick={() => setIsProfileOpen(true)}
               >
                 <div className="w-8 rounded-full">
                   <IoPersonCircleSharp className="size-full text-secondary" />
                 </div>
-              </div>
-              <ul
-                tabIndex={0}
-                className="menu menu-sm bg-base-100 dropdown-content rounded-box z-[1] mt-3 w-52 p-2 shadow-lg"
-              >
-                <li>
-                  <Link to="/Profile">Perfil</Link>
-                </li>
-                <li>
-                  <Link to="/signOut">Cerrar sesión</Link>
-                </li>
-              </ul>
-            </div>
+              </button>
+
+              {/* Modal de Perfil (como el de Delivery) */}
+              <dialog className={`modal ${isProfileOpen ? "modal-open" : ""}`}>
+                <div className="modal-box max-w-sm">
+                  <button
+                    className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                    onClick={() => setIsProfileOpen(false)}
+                  >
+                    ✕
+                  </button>
+
+                  <h3 className="font-bold text-xl text-primary mb-6">
+                    Mi Cuenta
+                  </h3>
+
+                  <div className="flex flex-col gap-3">
+                    <div className="bg-base-200 p-4 rounded-xl flex items-center gap-3 mb-4">
+                      <div className="avatar">
+                        <div className="w-12 rounded-full">
+                          <IoPersonCircleSharp className="size-full text-primary" />
+                        </div>
+                      </div>
+                      <div>
+                        <p className="font-bold text-base-content">{user?.name || "Usuario"}</p>
+                        <p className="text-xs text-base-content/60">{user?.email}</p>
+                      </div>
+                    </div>
+
+                    <Link
+                      to="/Profile"
+                      className="btn btn-ghost justify-start gap-4"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <IoPersonCircleSharp className="size-5" />
+                      Perfil
+                    </Link>
+
+                    <button
+                      className="btn btn-error btn-outline justify-start gap-4 mt-2"
+                      onClick={() => {
+                        logout();
+                        setIsProfileOpen(false);
+                      }}
+                    >
+                      <PiSignInFill className="size-5 rotate-180" />
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+                <form method="dialog" className="modal-backdrop">
+                  <button onClick={() => setIsProfileOpen(false)}>close</button>
+                </form>
+              </dialog>
+            </>
           ) : (
             // Botones de Iniciar Sesión / Crear Cuenta (Usuario NO logueado)
             <div className="flex items-center gap-1">
@@ -85,13 +133,13 @@ const Header: React.FC = () => {
                 <PiSignInFill className="size-5" />
               </Link>
               <Link
-                to="/Signup"
+                to="/SignUp"
                 className="btn btn-secondary btn-sm hidden lg:inline-flex"
               >
                 Crear Cuenta
               </Link>
               <Link
-                to="/Signup"
+                to="/SignUp"
                 className="btn btn-secondary btn-square btn-sm lg:hidden"
                 title="Crear Cuenta"
               >

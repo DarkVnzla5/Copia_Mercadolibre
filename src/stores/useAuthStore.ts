@@ -6,6 +6,7 @@ interface User {
   id: string;
   email: string;
   name?: string;
+  token?: string;
 }
 
 // Define la interfaz para el estado de autenticación
@@ -28,13 +29,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post<User>('/login', { email, password });
+      const response = await api.post<User>('/login/', { email, password });
       const userData = response.data;
 
       if (userData) {
         set({ user: userData, isLoading: false });
-        // El interceptor en Api.ts espera 'authtoken'
-        // localStorage.setItem('authtoken', userData.token); // Asumiendo que el backend devuelve un token
+        if (userData.token) {
+          localStorage.setItem('authtoken', userData.token);
+        }
         localStorage.setItem('user', JSON.stringify(userData));
         return true;
       } else {
@@ -53,11 +55,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signup: async (email, password, name) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post<User>('/signup', { email, password, name });
+      // Mapping name to first_name and setting username as email for DRF User model
+      const response = await api.post<User>('/signup/', {
+        email,
+        password,
+        first_name: name,
+        username: email
+      });
       const newUser = response.data;
 
       if (newUser) {
         set({ user: newUser, isLoading: false });
+        if (newUser.token) {
+          localStorage.setItem('authtoken', newUser.token);
+        }
         localStorage.setItem('user', JSON.stringify(newUser));
         return true;
       } else {

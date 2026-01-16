@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useParams } from "react-router";
 import { useProduct } from "../hooks/useProducts";
 import { useCart } from "../hooks/useCart";
+import { getImageUrl } from "../utils/imageUtils";
 
 const Details: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,7 +41,7 @@ const Details: React.FC = () => {
       <div className="max-w-4xl mx-auto card lg:card-side bg-base-100 shadow-xl">
         <figure className="lg:w-1/2 p-4">
           <img
-            src={item.thumbnail || item.images[0]}
+            src={getImageUrl(item.thumbnail || item.images[0])}
             alt={item.title || item.name}
             className="rounded-xl w-full h-auto object-cover aspect-square"
           />

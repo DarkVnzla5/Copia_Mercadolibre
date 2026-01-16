@@ -4,6 +4,7 @@ import type { Product } from "../hooks/useProducts";
 import { useProducts } from "../hooks/useProducts";
 import { useDolar } from "../hooks/useDolar";
 import { useFilterStore } from "../stores/useFilterStore";
+import { getImageUrl } from "../utils/imageUtils";
 
 const useFilteredProducts = (allProducts: Product[]) => {
   const { minPrice, maxPrice, selectedCategory } = useFilterStore();
@@ -12,7 +13,7 @@ const useFilteredProducts = (allProducts: Product[]) => {
     return allProducts.filter((product) => {
       // Note: The mock had 'price', backend 'Product' might need it too or we map it.
       // Assuming for now the backend Product has price or we use a fallback.
-      const productPrice = product.price || 0;
+      const productPrice = Number(product.price) || 0;
       const categoryMatch =
         selectedCategory === "Todo" || product.category === selectedCategory;
       const minPriceMatch =
@@ -64,7 +65,7 @@ const Products: React.FC = () => {
               */}
                 <figure className="relative w-full aspect-square overflow-hidden">
                   <img
-                    src={product.thumbnail || product.images[0]}
+                    src={getImageUrl(product.thumbnail || product.images[0])}
                     alt={product.title || product.name}
                     // w-full h-full object-cover: Asegura que la imagen llene el espacio cuadrado
                     // sin distorsionarse (la imagen se recorta si es necesario).
@@ -84,10 +85,10 @@ const Products: React.FC = () => {
 
                   {/* Precio: Destacado */}
                   <div className="text-xl font-bold text-secondary mt-2">
-                    <p>{(product.price || 0).toFixed(2)} $</p>
+                    <p>{Number(product.price || 0).toFixed(2)} $</p>
                     <p>
                       {dolarData
-                        ? `${((product.price || 0) * Number(dolarData)).toFixed(
+                        ? `${(Number(product.price || 0) * Number(dolarData)).toFixed(
                           2
                         )} Bs.`
                         : "Bs. N/A"}
