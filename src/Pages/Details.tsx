@@ -14,7 +14,7 @@ const Details: React.FC = () => {
     if (!item) return;
     try {
       setIsAdding(true);
-      await addItem({ productId: item.id, quantity: 1 });
+      await addItem({ productId: String(item.id), quantity: 1 });
       alert("Producto añadido al carrito");
     } catch (e) {
       console.error("Error adding to cart", e);
@@ -41,7 +41,12 @@ const Details: React.FC = () => {
       <div className="max-w-4xl mx-auto card lg:card-side bg-base-100 shadow-xl">
         <figure className="lg:w-1/2 p-4">
           <img
-            src={getImageUrl(item.thumbnail || item.images[0])}
+            src={getImageUrl(
+              item.thumbnail ||
+              (typeof item.images[0] === "string"
+                ? item.images[0]
+                : item.images[0]?.image)
+            )}
             alt={item.title || item.name}
             className="rounded-xl w-full h-auto object-cover aspect-square"
           />
@@ -51,7 +56,7 @@ const Details: React.FC = () => {
             {item.title || item.name}
           </h2>
           <p className="text-xl font-bold text-secondary">
-            {item.price.toFixed(2)} $
+            {Number(item.price || 0).toFixed(2)} $
           </p>
           <div className="badge badge-outline">{item.category}</div>
           <p className="mt-4 text-base-content/80">

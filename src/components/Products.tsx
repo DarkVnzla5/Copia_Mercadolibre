@@ -65,7 +65,12 @@ const Products: React.FC = () => {
               */}
                 <figure className="relative w-full aspect-square overflow-hidden">
                   <img
-                    src={getImageUrl(product.thumbnail || product.images[0])}
+                    src={getImageUrl(
+                      product.thumbnail ||
+                      (typeof product.images[0] === "string"
+                        ? product.images[0]
+                        : product.images[0]?.image)
+                    )}
                     alt={product.title || product.name}
                     // w-full h-full object-cover: Asegura que la imagen llene el espacio cuadrado
                     // sin distorsionarse (la imagen se recorta si es necesario).

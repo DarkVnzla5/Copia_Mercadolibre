@@ -22,6 +22,8 @@ function Bar() {
 				</button>
 			</div>
 			<Link to="/Pedidos" className="btn btn-md  max-lg:btn-sm">
+				<ReceiptText className="size-5 max-lg:visible lg:hidden" />
+				<span className="max-lg:hidden lg:visible">Pedidos y Presupuestos</span>
 				Pedidos y Presupuestos
 			</Link>
 

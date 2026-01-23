@@ -1,14 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../services/Api";
 
+export interface ProductImage {
+    id: number;
+    image: string;
+    product: number;
+    is_main: boolean;
+}
+
 export interface Product {
-    id: string;
+    id: string | number;
     name: string;
     title?: string; // Compatibility alias
     brand: string;
-    images: string[];
+    images: (string | ProductImage)[];
     category: string;
-    price: number;
+    price: number | string;
     description?: string;
     thumbnail?: string;
 }
@@ -21,7 +28,8 @@ export const useProducts = () => {
         queryKey: ["products"],
         queryFn: async () => {
             const response = await api.get("/products/");
-            return response.data;
+            // The API returns { value: Product[], Count: number }
+            return response.data.value || response.data;
         },
     });
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { Product } from "../hooks/useProducts";
 import { useProducts } from "../hooks/useProducts";
+import { getImageUrl } from "../utils/imageUtils";
 
 // Componente principal Items.tsx
 function Items() {
@@ -90,12 +91,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
   useEffect(() => {
     if (editingProduct) {
       setFormData({
-        id: editingProduct.id,
+        id: String(editingProduct.id),
         name: editingProduct.name,
         brand: editingProduct.brand,
-        images: editingProduct.images.join(", "),
+        images: editingProduct.images
+          .map((img) => (typeof img === "string" ? img : img.image))
+          .join(", "),
         category: editingProduct.category,
-        price: editingProduct.price || 0,
+        price: Number(editingProduct.price) || 0,
       });
       setMessage("");
       setMessageType("");
@@ -352,7 +355,9 @@ const ProductList: React.FC<ProductListProps> = ({
                       product.images.map((img, imgIndex) => (
                         <img
                           key={imgIndex}
-                          src={img}
+                          src={getImageUrl(
+                            typeof img === "string" ? img : img.image
+                          )}
                           alt={`Imagen de ${product.name} ${imgIndex + 1}`}
                           className="w-20 h-20 object-cover rounded-md border border-gray-300 transition-transform transform hover:scale-105"
                           onError={(e) => {
@@ -377,7 +382,7 @@ const ProductList: React.FC<ProductListProps> = ({
                   ✏️ Editar
                 </button>
                 <button
-                  onClick={() => onDeleteProduct(product.id)}
+                  onClick={() => onDeleteProduct(String(product.id))}
                   className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out transform hover:scale-105 text-sm font-medium shadow-md"
                 >
                   🗑️ Eliminar

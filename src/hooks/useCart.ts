@@ -22,6 +22,9 @@ export const useCart = () => {
     const cartQuery = useQuery<Cart | null>({
         queryKey: ["cart"],
         queryFn: async () => {
+            const token = localStorage.getItem("authtoken");
+            if (!token) return null;
+
             const response = await api.get("/carts/");
             const results = response.data.results || response.data;
 
@@ -39,6 +42,7 @@ export const useCart = () => {
 
             return null;
         },
+        enabled: !!localStorage.getItem("authtoken"),
     });
 
     // Add Item to Cart
