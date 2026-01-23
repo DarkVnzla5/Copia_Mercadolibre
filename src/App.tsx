@@ -13,6 +13,7 @@ import Details from "./Pages/Details.tsx";
 import Logistics from "./Pages/Logistics.tsx";
 import Pedidos from "./Pages/Pedidos.tsx";
 import Cart from "./Pages/Cart.tsx";
+import Inventoryentry from "./Pages/Inventoryentry.tsx";
 import "./App.css";
 
 const App: React.FC = () => {
@@ -49,6 +50,7 @@ const App: React.FC = () => {
             <Route path="/SignUp" element={<SignUp />} />
             <Route path="/Dashboard" element={<Dashboard />}>
               <Route path="Logistics" element={<Logistics />} />
+              <Route path="Inventoryentry" element={<Inventoryentry />} />
             </Route>
           </Route>
           <Route

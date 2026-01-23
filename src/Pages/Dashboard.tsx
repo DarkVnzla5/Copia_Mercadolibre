@@ -3,6 +3,8 @@ import axios from "axios";
 import { Chart, registerables } from "chart.js";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import { Outlet } from "react-router";
+import Bars from "../components/Bars";
+
 
 Chart.register(...registerables);
 
@@ -52,6 +54,10 @@ const Dashboard: React.FC = () => {
         <Outlet />
       </section>
       <p className="text-3xl font-bold mb-6">Panel de Control</p>
+
+      <section>
+        <Bars />
+      </section>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Sales Chart */}
         <div className="card bg-base-100 shadow-xl">
