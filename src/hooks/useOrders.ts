@@ -18,7 +18,7 @@ export const useOrders = () => {
     const ordersQuery = useQuery<Order[]>({
         queryKey: ["orders"],
         queryFn: async () => {
-            const response = await api.get("/orders/");
+            const response = await api.get("orders/");
             return response.data.results || response.data;
         },
     });
@@ -27,7 +27,7 @@ export const useOrders = () => {
     const useOrder = (id: string) => useQuery<Order>({
         queryKey: ["orders", id],
         queryFn: async () => {
-            const response = await api.get(`/orders/${id}/`);
+            const response = await api.get(`orders/${id}/`);
             return response.data;
         },
         enabled: !!id,
@@ -42,9 +42,9 @@ export const useOrders = () => {
 
             // Create orders for each item
             const orderPromises = cart.items.map((item) =>
-                api.post("/orders/", {
+                api.post("orders/", {
                     producto: item.product,
-                    cantidad: item.cantidad,
+                    cantidad: item.quantity,
                 })
             );
 
@@ -63,7 +63,7 @@ export const useOrders = () => {
     // Update Order
     const updateOrderMutation = useMutation({
         mutationFn: async ({ id, data }: { id: string; data: Partial<Order> }) => {
-            const response = await api.patch(`/orders/${id}/`, data);
+            const response = await api.patch(`orders/${id}/`, data);
             return response.data;
         },
         onSuccess: (_, { id }) => {
@@ -75,7 +75,7 @@ export const useOrders = () => {
     // Delete Order
     const deleteOrderMutation = useMutation({
         mutationFn: async (id: string) => {
-            await api.delete(`/orders/${id}/`);
+            await api.delete(`orders/${id}/`);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["orders"] });

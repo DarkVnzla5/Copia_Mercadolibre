@@ -6,7 +6,8 @@ interface User {
   id: string;
   email: string;
   name?: string;
-  token?: string;
+  access?: string;
+  refresh?: string;
 }
 
 // Define la interfaz para el estado de autenticación
@@ -29,13 +30,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post<User>('/login/', { email, password });
+      const response = await api.post<User>('login/', { email, password });
       const userData = response.data;
 
       if (userData) {
         set({ user: userData, isLoading: false });
-        if (userData.token) {
-          localStorage.setItem('authtoken', userData.token);
+        if (userData.access) {
+          localStorage.setItem('authtoken', userData.access);
+        }
+        if (userData.refresh) {
+          localStorage.setItem('refreshtoken', userData.refresh);
         }
         localStorage.setItem('user', JSON.stringify(userData));
         return true;
@@ -56,7 +60,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       // Mapping name to first_name and setting username as email for DRF User model
-      const response = await api.post<User>('/signup/', {
+      const response = await api.post<User>('signup/', {
         email,
         password,
         first_name: name,
@@ -66,8 +70,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (newUser) {
         set({ user: newUser, isLoading: false });
-        if (newUser.token) {
-          localStorage.setItem('authtoken', newUser.token);
+        if (newUser.access) {
+          localStorage.setItem('authtoken', newUser.access);
+        }
+        if (newUser.refresh) {
+          localStorage.setItem('refreshtoken', newUser.refresh);
         }
         localStorage.setItem('user', JSON.stringify(newUser));
         return true;
@@ -87,6 +94,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: () => {
     set({ user: null, error: null });
     localStorage.removeItem('authtoken');
+    localStorage.removeItem('refreshtoken');
     localStorage.removeItem('user');
   },
 
@@ -100,7 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return false;
       }
 
-      const response = await api.put<User>(`/users/${currentUser.id}`, data);
+      const response = await api.put<User>(`users/${currentUser.id}/`, data);
       const updatedUser = response.data;
 
       if (updatedUser) {

@@ -9,13 +9,15 @@ export interface ProductImage {
 }
 
 export interface Product {
-    id: string | number;
+    id?: string | number;
+    code: string;
     name: string;
     title?: string; // Compatibility alias
     brand: string;
     images: (string | ProductImage)[];
     category: string;
     price: number | string;
+    quantity: number;
     description?: string;
     thumbnail?: string;
 }
@@ -27,38 +29,57 @@ export const useProducts = () => {
     const productsQuery = useQuery<Product[]>({
         queryKey: ["products"],
         queryFn: async () => {
-            const response = await api.get("/products/");
+            const response = await api.get("products/");
             // The API returns { value: Product[], Count: number }
             return response.data.value || response.data;
         },
     });
 
-    // Add Product
+    // Add Product - supports both JSON and FormData
     const addProductMutation = useMutation({
-        mutationFn: async (newProduct: Product) => {
-            const response = await api.post("/products/", newProduct);
-            return response.data;
+        mutationFn: async (data: Product | FormData) => {
+            if (data instanceof FormData) {
+                const response = await api.post("products/", data, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+                return response.data;
+            } else {
+                const response = await api.post("products/", data);
+                return response.data;
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["products"] });
         },
     });
 
-    // Update Product
+    // Update Product - supports both JSON and FormData
     const updateProductMutation = useMutation({
-        mutationFn: async (updatedProduct: Product) => {
-            const response = await api.put(`/products/${updatedProduct.id}/`, updatedProduct);
-            return response.data;
+        mutationFn: async (data: any) => {
+            if (data.FormData && data.id) {
+                const response = await api.put(`products/${data.id}/`, data.FormData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+                return response.data;
+            } else {
+                const response = await api.put(`products/${data.id}/`, data);
+                return response.data;
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["products"] });
         },
-    });
+    })
+
 
     // Delete Product
     const deleteProductMutation = useMutation({
         mutationFn: async (id: string) => {
-            await api.delete(`/products/${id}/`);
+            await api.delete(`products/${id}/`);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -83,7 +104,7 @@ export const useProduct = (id: string) => {
     return useQuery<Product>({
         queryKey: ["products", id],
         queryFn: async () => {
-            const response = await api.get(`/products/${id}/`);
+            const response = await api.get(`products/${id}/`);
             return response.data;
         },
         enabled: !!id,

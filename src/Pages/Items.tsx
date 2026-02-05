@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { Product } from "../hooks/useProducts";
 import { useProducts } from "../hooks/useProducts";
-import { getImageUrl } from "../utils/imageUtils";
+
 
 // Componente principal Items.tsx
 function Items() {
@@ -16,50 +16,73 @@ function Items() {
   } = useProducts();
 
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
 
   const startEditing = (product: Product) => {
     setEditingProduct(product);
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const handleAddProduct = async (product: Product) => {
-    await addProduct(product);
+    try {
+      await addProduct(product);
+    } catch (error) {
+      console.error("Error adding product:", error);
+    }
   };
 
   const handleUpdateProduct = async (product: Product) => {
-    await updateProduct(product);
-    setEditingProduct(null);
+    try {
+      await updateProduct(product);
+      setEditingProduct(null);
+    } catch (error) {
+      console.error("Error updating product:", error);
+    }
   };
 
   const handleDeleteProduct = async (id: string) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este producto?")) {
-      await deleteProduct(id);
+      try {
+        await deleteProduct(id);
+      } catch (error) {
+        console.error("Error deleting product:", error);
+      }
     }
   };
 
   return (
     <div className="min-h-screen bg-base-300 flex flex-col items-center py-10 font-sans">
-      <p className="badge badge-primary-content p-5 rounded-md mb-4 text-lg font-bold">
-        🔧 Gestor de Productos 🛠️
-      </p>
 
       {/* Muestra mensajes de carga o error del hook */}
       {isLoading && <p>Cargando productos...</p>}
       {isError && <p className="text-red-500">{(error as Error)?.message || "Error al cargar productos"}</p>}
 
-      <ProductForm
-        onAddProduct={handleAddProduct}
-        onUpdateProduct={handleUpdateProduct}
-        editingProduct={editingProduct}
-        setEditingProduct={setEditingProduct}
-      />
-      <ProductList
-        products={products}
-        onDeleteProduct={handleDeleteProduct}
-        onEditProduct={startEditing}
-      />
+      <div ref={formRef} className="lg:col-span-5 xl:col-span-4">
+        <ProductForm
+          onAddProduct={handleAddProduct}
+          onUpdateProduct={handleUpdateProduct}
+          editingProduct={editingProduct}
+          setEditingProduct={setEditingProduct}
+        />
+      </div>
+
+      <div className="lg:col-span-7 xl:col-span-8">
+        {isLoading ? (
+          <div>
+            <div className="w-10 h-10 border-4 border-primary border-t-secondary rounded-full animate-spin mb-4"></div>
+            <p className="font-black uppercase tracking-[0.2em] text-[10px]">Cargando productos...</p>
+          </div>
+        ) : (
+          <ProductList
+            products={products}
+            onDeleteProduct={handleDeleteProduct}
+            onEditProduct={startEditing}
+          />
+        )};
+      </div>
     </div>
   );
-}
+};
 
 // ... (Los componentes ProductForm y ProductList se mantienen igual) ...
 
@@ -78,132 +101,121 @@ const ProductForm: React.FC<ProductFormProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     id: "",
+    code: "",
     name: "",
     brand: "",
     images: "",
     category: "",
-    price: 0,
+    price: "",
+    quantity: "",
   });
 
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState<"success" | "error" | "">("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [notification, setNotification] = useState({ Text: "", Type: "" });
 
   useEffect(() => {
     if (editingProduct) {
       setFormData({
         id: String(editingProduct.id),
+        code: editingProduct.code,
         name: editingProduct.name,
-        brand: editingProduct.brand,
-        images: editingProduct.images
-          .map((img) => (typeof img === "string" ? img : img.image))
-          .join(", "),
-        category: editingProduct.category,
-        price: Number(editingProduct.price) || 0,
+        brand: editingProduct.brand || "",
+        images: editingProduct.images.map((img) => typeof img === "string" ? img : img.image).join(", "),
+        category: editingProduct.category || "",
+        price: String(editingProduct.price),
+        quantity: String(editingProduct.quantity),
       });
-      setMessage("");
-      setMessageType("");
     } else {
       setFormData({
         id: "",
+        code: "",
         name: "",
         brand: "",
         images: "",
         category: "",
-        price: 0,
-      });
+        price: "",
+        quantity: "",
+      })
     }
-  }, [editingProduct]);
+  }, [editingProduct])
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setImageFiles(filesArray);
+      // Actualizar el campo images con los nombres de archivo para mostrar
+      const fileNames = filesArray.map(f => f.name).join(", ");
+      setFormData(prev => ({ ...prev, images: fileNames }));
+    }
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (
-      !formData.id ||
-      !formData.name ||
-      !formData.brand ||
-      !formData.images ||
-      !formData.category
-    ) {
-      setMessage("Por favor, completa todos los campos.");
-      setMessageType("error");
-      return;
-    }
-
-    const productToSave: Product = {
-      id: formData.id,
-      name: formData.name,
-      brand: formData.brand,
-      images: formData.images
-        .split(",")
-        .map((img) => img.trim())
-        .filter((img) => img !== ""),
-      category: formData.category,
-      price: Number(formData.price),
-    };
-
     try {
+      const data = new FormData();
+      data.append('code', formData.code);
+      data.append('name', formData.name);
+      data.append('brand', formData.brand);
+      data.append('category', formData.category);
+      data.append('price', formData.price);
+      data.append('quantity', formData.quantity);
+      imageFiles.forEach((file) => {
+        data.append('images', file);
+      });
       if (editingProduct) {
-        await onUpdateProduct(productToSave);
-        setMessage("¡Producto actualizado exitosamente!");
+        await onUpdateProduct({
+          formData: data,
+          id: String(editingProduct.id)
+        } as any);
+        setNotification({ Text: "Producto actualizado correctamente", Type: "success" })
       } else {
-        await onAddProduct(productToSave);
-        setMessage("¡Producto agregado exitosamente!");
-      }
-      setMessageType("success");
-
-      // Limpiar formulario después de agregar (no después de editar)
-      if (!editingProduct) {
+        await onAddProduct(data as any);
+        setNotification({ Text: "Producto agregado correctamente", Type: "success" })
         setFormData({
           id: "",
+          code: "",
           name: "",
           brand: "",
           images: "",
           category: "",
-          price: 0,
+          price: "",
+          quantity: "",
         });
+        setImageFiles([]);
       }
-    } catch {
-      setMessage("Hubo un error al procesar la solicitud.");
-      setMessageType("error");
+      setTimeout(() => {
+        setNotification({ Text: "", Type: "" });
+      }, 3000);
+    } catch (error: any) {
+      console.error("Error al agregar/actualizar producto:", error);
+      setNotification({ Text: error.response.data.message, Type: "error" });
     }
-
-    setTimeout(() => {
-      setMessage("");
-      setMessageType("");
-    }, 3000);
   };
-
+  // Limpiar formulario después de agregar (no después de editar)
   const handleCancelEdit = () => {
     setEditingProduct(null);
-    setMessage("");
-    setMessageType("");
   };
-
   return (
-    <div className="card bg-base-100 shadow-xl p-8 w-full max-w-2xl border border-primary gap-2">
+    <div className="card bg-base-100 shadow-xl p-8 w-full max-w-2xl border border-primary gap-2 flex">
       <p className="text-2xl font-bold mb-6 text-center">
         {editingProduct ? "Editar Item" : "Agregar Nuevo Item"}
       </p>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="id" className="label">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-1">
+          <label htmlFor="code" className="label">
             Codigo:
           </label>
           <input
             type="text"
-            id="id"
-            name="id"
-            value={formData.id}
+            id="code"
+            name="code"
+            value={formData.code}
             onChange={handleChange}
             className="mt-1 block w-full px-4 py-2 border sm:text-sm border-primary"
             placeholder="Ej: H-001"
@@ -244,7 +256,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             required
           />
         </div>
-        <div>
+        <div className="space-y-1">
           <label htmlFor="images" className="label">
             Imágenes o Fotos:
           </label>
@@ -252,11 +264,46 @@ const ProductForm: React.FC<ProductFormProps> = ({
             type="file"
             id="images"
             name="images"
-            value={formData.images}
+            onChange={handleFileChange}
+            className="file-input file-input-bordered file-input-primary w-full"
+            accept="image/*"
+            multiple
+          />
+          {imageFiles.length > 0 && (
+            <p className="text-xs text-gray-500">
+              {imageFiles.length} archivo(s) seleccionado(s): {imageFiles.map(f => f.name).join(", ")}
+            </p>
+          )}
+        </div>
+        <div>
+          <label htmlFor="price" className="label">
+            Precio ($):
+          </label>
+          <input
+            type="number"
+            id="price"
+            name="price"
+            value={formData.price}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border rounded-md sm:text-sm border-secondary"
+            className="mt-1 block w-full px-4 py-2 border rounded-md sm:text-sm border-primary"
+            placeholder="Ej: 45.50"
             required
-            accept="image/jpg, image/png, image/gif"
+            step="0.01"
+          />
+        </div>
+        <div>
+          <label htmlFor="quantity" className="label">
+            Stock / Cantidad:
+          </label>
+          <input
+            type="number"
+            id="quantity"
+            name="quantity"
+            value={formData.quantity}
+            onChange={handleChange}
+            className="mt-1 block w-full px-4 py-2 border rounded-md sm:text-sm border-primary"
+            placeholder="Ej: 100"
+            required
           />
         </div>
         <div>
@@ -288,13 +335,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
             Cancelar Edición
           </button>
         )}
-
-        {message && (
-          <div
-            className={`mt-4 p-3 rounded-md text-center text-sm ${messageType === "success" ? "btn-success" : "btn-error"
-              }`}
-          >
-            {message}
+        {notification.Text && (
+          <div className="badge badge-primary">
+            {notification.Text}
           </div>
         )}
       </form>
@@ -337,7 +380,7 @@ const ProductList: React.FC<ProductListProps> = ({
                   {product.name}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <span className="font-semibold">Codigo:</span> {product.id}
+                  <span className="font-semibold">Codigo:</span> {product.code}
                 </p>
                 <p className="text-sm text-gray-600">
                   <span className="font-semibold">Marca:</span> {product.brand}
@@ -355,9 +398,9 @@ const ProductList: React.FC<ProductListProps> = ({
                       product.images.map((img, imgIndex) => (
                         <img
                           key={imgIndex}
-                          src={getImageUrl(
+                          src={(
                             typeof img === "string" ? img : img.image
-                          )}
+                          ) || undefined}
                           alt={`Imagen de ${product.name} ${imgIndex + 1}`}
                           className="w-20 h-20 object-cover rounded-md border border-gray-300 transition-transform transform hover:scale-105"
                           onError={(e) => {
@@ -367,7 +410,7 @@ const ProductList: React.FC<ProductListProps> = ({
                         />
                       ))
                     ) : (
-                      <span className="text-gray-500 text-xs">
+                      <span className="text-primary text-xs">
                         No hay imágenes.
                       </span>
                     )}
@@ -393,6 +436,6 @@ const ProductList: React.FC<ProductListProps> = ({
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 export default Items;

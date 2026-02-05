@@ -5,7 +5,7 @@ export interface CartItem {
     id: string;
     cart: string;
     product: string;
-    cantidad: number;
+    quantity: number;
     price_at_addition: number;
 }
 
@@ -25,7 +25,7 @@ export const useCart = () => {
             const token = localStorage.getItem("authtoken");
             if (!token) return null;
 
-            const response = await api.get("/carts/");
+            const response = await api.get("carts/");
             const results = response.data.results || response.data;
 
             if (results && results.length > 0) {
@@ -36,7 +36,7 @@ export const useCart = () => {
             const userStr = localStorage.getItem("user");
             if (userStr) {
                 const user = JSON.parse(userStr);
-                const createResponse = await api.post("/carts/", { user: user.id });
+                const createResponse = await api.post("carts/", { user: user.id });
                 return createResponse.data;
             }
 
@@ -55,10 +55,10 @@ export const useCart = () => {
                 cartId = cart?.id;
             }
 
-            const response = await api.post("/cartitems/", {
+            const response = await api.post("cartitems/", {
                 cart: cartId,
                 product: productId,
-                cantidad: quantity,
+                quantity: quantity,
             });
             return response.data;
         },
@@ -70,8 +70,8 @@ export const useCart = () => {
     // Update Item Quantity
     const updateItemMutation = useMutation({
         mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
-            const response = await api.patch(`/cartitems/${itemId}/`, {
-                cantidad: quantity,
+            const response = await api.patch(`cartitems/${itemId}/`, {
+                quantity: quantity,
             });
             return response.data;
         },
@@ -83,7 +83,7 @@ export const useCart = () => {
     // Remove Item from Cart
     const removeItemMutation = useMutation({
         mutationFn: async (itemId: string) => {
-            await api.delete(`/cartitems/${itemId}/`);
+            await api.delete(`cartitems/${itemId}/`);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -97,16 +97,16 @@ export const useCart = () => {
             if (!cart || !cart.items) return;
 
             // Parallel deletion
-            await Promise.all(cart.items.map(item => api.delete(`/cartitems/${item.id}/`)));
+            await Promise.all(cart.items.map(item => api.delete(`cartitems/${item.id}/`)));
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["cart"] });
         },
     });
 
-    const cartTotal = cartQuery.data?.items.reduce((total, item) => {
-        return total + item.cantidad * item.price_at_addition;
-    }, 0) || 0;
+    const cartTotal = (cartQuery.data?.items || []).reduce((total, item) => {
+        return total + item.quantity * item.price_at_addition;
+    }, 0);
 
     return {
         cart: cartQuery.data,

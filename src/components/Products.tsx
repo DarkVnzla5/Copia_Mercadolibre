@@ -4,7 +4,7 @@ import type { Product } from "../hooks/useProducts";
 import { useProducts } from "../hooks/useProducts";
 import { useDolar } from "../hooks/useDolar";
 import { useFilterStore } from "../stores/useFilterStore";
-import { getImageUrl } from "../utils/imageUtils";
+
 
 const useFilteredProducts = (allProducts: Product[]) => {
   const { minPrice, maxPrice, selectedCategory } = useFilterStore();
@@ -65,12 +65,10 @@ const Products: React.FC = () => {
               */}
                 <figure className="relative w-full aspect-square overflow-hidden">
                   <img
-                    src={getImageUrl(
-                      product.thumbnail ||
+                    src={product.thumbnail ||
                       (typeof product.images[0] === "string"
                         ? product.images[0]
-                        : product.images[0]?.image)
-                    )}
+                        : product.images[0]?.image) || undefined}
                     alt={product.title || product.name}
                     // w-full h-full object-cover: Asegura que la imagen llene el espacio cuadrado
                     // sin distorsionarse (la imagen se recorta si es necesario).

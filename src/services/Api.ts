@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance } from "axios";
 export const BASE_URL = 'http://localhost:8000';
-export const API_BASE_URL = `${BASE_URL}/api`;
+export const API_BASE_URL = `${BASE_URL}/api/`;
+
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -27,11 +28,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    if ((error.response?.status === 401 || error.response?.status === 403) && !window.location.pathname.includes("/LogIn")) {
       // Token expirado o inválido - logout
       localStorage.removeItem("authtoken");
       localStorage.removeItem("user");
       window.location.href = "/LogIn";
+      console.log(error.response?.status);
     }
 
     if (error.response?.status === 505) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/Api";
 import { Chart, registerables } from "chart.js";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import { Outlet } from "react-router";
@@ -18,7 +18,7 @@ interface DashboardData {
 
 const fetchDashboardData = async (): Promise<DashboardData> => {
   // Replace with your API endpoint
-  const { data } = await axios.get("/api/dashboard");
+  const { data } = await api.get("dashboard/");
   return data;
 };
 
