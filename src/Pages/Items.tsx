@@ -54,7 +54,6 @@ function Items() {
     <div className="min-h-screen bg-base-300 flex flex-col items-center py-10 font-sans">
 
       {/* Muestra mensajes de carga o error del hook */}
-      {isLoading && <p>Cargando productos...</p>}
       {isError && <p className="text-red-500">{(error as Error)?.message || "Error al cargar productos"}</p>}
 
       <div ref={formRef} className="lg:col-span-5 xl:col-span-4">
@@ -78,7 +77,7 @@ function Items() {
             onDeleteProduct={handleDeleteProduct}
             onEditProduct={startEditing}
           />
-        )};
+        )}
       </div>
     </div>
   );
@@ -359,9 +358,9 @@ const ProductList: React.FC<ProductListProps> = ({
   onEditProduct,
 }) => {
   return (
-    <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl border border-gray-200">
+    <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl border border-gray-200 mt-4">
       <h2 className="text-2xl font-bold text-gray-700 mb-6 text-center">
-        Items Agregados
+        Ultimos Productos Agregados
       </h2>
       {products.length === 0 ? (
         <p className="text-center text-gray-500 text-lg py-4">

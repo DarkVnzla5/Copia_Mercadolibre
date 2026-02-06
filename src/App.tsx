@@ -41,16 +41,16 @@ const App: React.FC = () => {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="products/:id" element={<Details />} />
-            <Route path="/Items" element={<Items />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/Pedidos" element={<Pedidos />} />
-            <Route path="/About" element={<About />} />
-            <Route path="/Profile" element={<Profile />} />
-            <Route path="/LogIn" element={<LogIn />} />
-            <Route path="/SignUp" element={<SignUp />} />
-            <Route path="/Dashboard" element={<Dashboard />}>
+            <Route path="cart" element={<Cart />} />
+            <Route path="About" element={<About />} />
+            <Route path="Profile" element={<Profile />} />
+            <Route path="LogIn" element={<LogIn />} />
+            <Route path="SignUp" element={<SignUp />} />
+            <Route path="Dashboard" element={<Dashboard />}>
               <Route path="Logistics" element={<Logistics />} />
               <Route path="Inventoryentry" element={<Inventoryentry />} />
+              <Route path="Items" element={<Items />} />
+              <Route path="Pedidos" element={<Pedidos />} />
             </Route>
           </Route>
           <Route

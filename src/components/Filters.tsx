@@ -97,11 +97,10 @@ const Filters: React.FC = () => {
           {categories.map((category) => (
             <div key={category} className="form-control">
               <label
-                className={`label cursor-pointer p-2 rounded-lg transition-all ${
-                  selectedCategory === category
+                className={`label cursor-pointer p-2 rounded-lg transition-all ${selectedCategory === category
                     ? "bg-primary text-primary-content font-bold"
                     : "hover:bg-base-200"
-                }`}
+                  }`}
                 onClick={() => setSelectedCategory(category)}
               >
                 <span className="label-text text-sm">{category}</span>

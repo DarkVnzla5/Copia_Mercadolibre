@@ -20,6 +20,8 @@ export interface Product {
     quantity: number;
     description?: string;
     thumbnail?: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export const useProducts = () => {

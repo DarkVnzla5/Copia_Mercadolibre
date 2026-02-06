@@ -4,9 +4,9 @@ import { Forklift, CirclePile, ReceiptText } from "lucide-react";
 
 function Bar() {
 	return (
-		<section className="flex gap-4 mb-4">
+		<section className="flex gap-4 justify-between">
 			<div>
-				<button className="btn">
+				<button className="btn btn-primary">
 					<Link to="Logistics">
 						<Forklift className="size-5 max-lg:visible lg:hidden" />
 						<span className="max-lg:hidden lg:visible">Logistica</span>
@@ -14,24 +14,25 @@ function Bar() {
 				</button>
 			</div>
 			<div>
-				<button className="btn">
+				<button className="btn btn-primary">
 					<Link to="Inventoryentry">
 						<CirclePile className="size-5 max-lg:visible lg:hidden" />
 						<span className="max-lg:hidden lg:visible">Inventario</span>
 					</Link>
 				</button>
 			</div>
-			<Link to="/Pedidos" className="btn btn-md  max-lg:btn-sm">
-				<ReceiptText className="size-5 max-lg:visible lg:hidden" />
-				<span className="max-lg:hidden lg:visible">Pedidos y Presupuestos</span>
-				Pedidos y Presupuestos
-			</Link>
-
-			{/* Gestión de Artículos */}
-			<Link to="/Items" className="btn btn-md max-lg:btn-sm">
-				<GoArchive className="size-5 max-lg:visible lg:hidden" />
-				<span className="max-lg:hidden lg:visible">Gestión de Artículos</span>
-			</Link>
+			<button className="btn btn-primary">
+				<Link to="Pedidos">
+					<ReceiptText className="size-5 max-lg:visible lg:hidden" />
+					<span className="max-lg:hidden lg:visible">Pedidos y Presupuestos</span>
+				</Link>
+			</button>
+			<button className="btn btn-primary">
+				<Link to="Items">
+					<GoArchive className="size-5 max-lg:visible lg:hidden" />
+					<span className="max-lg:hidden lg:visible">Gestión de Artículos</span>
+				</Link>
+			</button>
 		</section>
 	);
 }

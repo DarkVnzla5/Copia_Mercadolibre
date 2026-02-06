@@ -1,12 +1,12 @@
-import { create }  from "zustand";
+import { create } from "zustand";
 
 export type FilterState = {
-  minPrice: number | null;
-  maxPrice: number | null;
+  minPrice: number | string;
+  maxPrice: number | string;
   selectedCategory: string;
 };
-export type SearchBarState={
-  searchQuery:string;
+export type SearchBarState = {
+  searchQuery: string;
 }
 export type FilterActions = {
   setMinPrice: (price: number | null) => void;
@@ -14,8 +14,8 @@ export type FilterActions = {
   setSelectedCategory: (category: string) => void;
   resetFilters: () => void;
 };
-export type SearchBarActions={
-  setSearchQuery:(query:string | [])=>void;
+export type SearchBarActions = {
+  setSearchQuery: (query: string | []) => void;
 };
 
 const initialState: FilterState = {
@@ -23,10 +23,10 @@ const initialState: FilterState = {
   maxPrice: null,
   selectedCategory: "Todo",
 };
-export const useFilterStore = create<FilterState & FilterActions>((set)=>({
+export const useFilterStore = create<FilterState & FilterActions>((set) => ({
   ...initialState,
-  setMinPrice:(price)=>set({minPrice:price}),
-  setMaxPrice:(price)=>set({maxPrice:price}),
-  setSelectedCategory:(category)=>set({selectedCategory:category}),
-  resetFilters:()=>set({...initialState}),
+  setMinPrice: (price) => set({ minPrice: price }),
+  setMaxPrice: (price) => set({ maxPrice: price }),
+  setSelectedCategory: (category) => set({ selectedCategory: category }),
+  resetFilters: () => set({ ...initialState }),
 }));
