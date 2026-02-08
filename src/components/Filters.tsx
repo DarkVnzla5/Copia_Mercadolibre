@@ -1,17 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useFilterStore } from "../stores/useFilterStore";
-
-const categories = [
-  "Todo",
-  "Herramientas eléctricas",
-  "Herramientas manuales",
-  "Pintura y acabados",
-  "Mobiliario de Taller",
-  "Plomería y Electricidad",
-  "Protección Personal",
-];
+import { useProducts } from "../hooks/useProducts";
 
 const Filters: React.FC = () => {
+  const { products } = useProducts();
   const {
     minPrice,
     maxPrice,
@@ -21,6 +13,11 @@ const Filters: React.FC = () => {
     setSelectedCategory,
     resetFilters,
   } = useFilterStore();
+
+  const dynamicCategories = useMemo(() => {
+    const unique = [...new Set(products.map(p => p.category))];
+    return ["Todo", ...unique];
+  }, [products]);
 
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -32,8 +29,8 @@ const Filters: React.FC = () => {
     const price = value === "" ? null : Number(value);
     setMaxPrice(price);
   };
-  const minPriceValue: string | number = minPrice === null ? "" : minPrice;
-  const maxPriceValue: string | number = maxPrice === null ? "" : maxPrice;
+  const minPriceValue = minPrice === null ? "" : minPrice;
+  const maxPriceValue = maxPrice === null ? "" : maxPrice;
   // Lista de categorías para hacer el componente más dinámico
 
   // Por ejemplo, una llamada a una API o a una función de filtro global.
@@ -42,30 +39,25 @@ const Filters: React.FC = () => {
     // Contenedor principal: una barra lateral clara y limpia.
     // Usamos 'sticky top-0' si quieres que la barra se quede fija al hacer scroll.
     <nav className="flex flex-col w-full lg:w-64 p-4 bg-base-100 shadow-xl rounded-box">
-      <h2 className="text-xl font-bold mb-4 text-primary">
-        Filtros de Productos
-      </h2>
-
       {/* 2. SECCIÓN RANGO DE PRECIOS */}
       <section className="mb-6 p-2">
-        <h3 className="text-lg font-semibold mb-2 text-info">
-          Rango de Precio
-        </h3>
+
 
         {/* Indicadores de precio seleccionado */}
         <div className="flex flex-col text-lg font-bold mb-3 text-secondary">
-          {minPriceValue !== null && minPrice > 0 && (
-            <span>Desde: ${minPriceValue}</span>
+          {(minPrice ?? 0) > 0 && (
+            <span>Mínimo: ${minPrice}</span>
           )}
-          {maxPriceValue !== null && maxPrice > 0 && (
-            <span>Hasta: ${maxPriceValue}</span>
+          {(maxPrice ?? 0) > 0 && (
+            <span>Máximo: ${maxPrice}</span>
           )}
-          {(minPrice === 0 || minPrice === null) &&
-            (maxPrice === 0 || maxPrice === null) && <span>Todo</span>}
           {selectedCategory !== "Todo" && (
             <span>Categoría: {selectedCategory}</span>
           )}
         </div>
+        <p className="text-lg font-semibold mb-2 text-info">
+          Precio
+        </p>
 
         {/* Inputs de Precio */}
         <div className="flex flex-col gap-3">
@@ -94,12 +86,12 @@ const Filters: React.FC = () => {
         <p className="text-lg font-semibold mb-2 text-info">Categorías</p>
 
         <div className="flex flex-col gap-2">
-          {categories.map((category) => (
+          {dynamicCategories.map((category) => (
             <div key={category} className="form-control">
               <label
                 className={`label cursor-pointer p-2 rounded-lg transition-all ${selectedCategory === category
-                    ? "bg-primary text-primary-content font-bold"
-                    : "hover:bg-base-200"
+                  ? "bg-primary text-primary-content font-bold"
+                  : "hover:bg-base-200"
                   }`}
                 onClick={() => setSelectedCategory(category)}
               >
@@ -117,16 +109,15 @@ const Filters: React.FC = () => {
           ))}
         </div>
       </section>
-
       {/* Botón de Limpiar Filtros */}
-      <button
+      {selectedCategory !== "Todo" && <button
         className="btn btn-ghost btn-sm text-sm mt-4"
         onClick={() => {
           resetFilters();
         }}
       >
         Limpiar Todos los Filtros
-      </button>
+      </button>}
     </nav>
   );
 };

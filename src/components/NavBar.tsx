@@ -1,7 +1,6 @@
 import React from "react";
 import { Link } from "react-router";
 import { IoPersonCircleSharp } from "react-icons/io5";
-
 import { PiSignInFill, PiUserPlusFill, PiShoppingCartFill } from "react-icons/pi";
 import { GestionIcon } from "./Icons";
 import SearchBar from "./SearchBar";
@@ -15,22 +14,16 @@ const Header: React.FC = () => {
   const { dolarData } = useDolar();
   const { user, logout } = useAuthStore();
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
-
-  const handleSearch = (query: string) => {
-    // Implement search logic here
-    console.log("Search query:", query);
-  };
-
   const isLoggedIn = !!user?.id;
 
   return (
     <nav className="flex flex-col gap-3 p-4 bg-base-200 shadow-lg">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-around gap-4">
         {/* --- Columna 1: Logo --- */}
         <section>
           <div className="flex items-center">
             <Link to="/">
-              <button className=" btn btn-lg btn-primary">
+              <button className=" btn btn-md btn-primary">
                 {BussinesName}
               </button>
             </Link>
@@ -40,7 +33,7 @@ const Header: React.FC = () => {
           <DeliveryModal />
         </section>
         <section>
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar />
         </section>
 
         {/* --- Columna 2: Indicador Dólar + Acciones de Usuario --- */}
