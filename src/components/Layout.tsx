@@ -6,13 +6,11 @@ import React from "react";
 const Layout: React.FC = () => {
 
   return (
-    <div>
+    <div >
       <Header />
-      <main>
-        <div>
-          <Outlet />
-        </div>
-      </main>
+      <div>
+        <Outlet />
+      </div>
       <Footer />
     </div>
   );

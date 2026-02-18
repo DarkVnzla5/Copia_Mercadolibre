@@ -3,8 +3,6 @@ import Products from "../components/Products";
 import Filters from "../components/Filters";
 import { IoIosSearch, IoMdClose } from "react-icons/io";
 
-
-
 const Home: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleFilter = () => {
@@ -45,7 +43,7 @@ const Home: React.FC = () => {
       )}
 
       {/* 2. Componente Products: Toma todo el ancho en móvil y 3/4 en desktop. */}
-      <div className="w-full md:w-3/4 flex-grow">
+      <div className="w-full md:w-3/4 grow flex">
         {/* Cabecera Móvil con el botón de Lupa (visible solo en móvil) */}
         <div className="sticky top-0 z-10  md:hidden p-4 border-b shadow-sm flex justify-between items-center">
           <p className="badge badge-primary badge-xl bg-base-content">

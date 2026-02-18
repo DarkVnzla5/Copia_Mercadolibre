@@ -1,16 +1,19 @@
 import { create } from 'zustand';
 import api from "../services/Api";
 
-// 1. Define la interfaz para el objeto de usuario
+// 1. Interfaces mejoradas
 interface User {
   id: string;
   email: string;
-  name?: string;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+  role?: string;
+  avatar?: string; // URL del avatar
   access?: string;
   refresh?: string;
 }
 
-// Define la interfaz para el estado de autenticación
 interface AuthState {
   user: User | null;
   isLoading: boolean;
@@ -18,118 +21,110 @@ interface AuthState {
   login: (email: string, password: string) => Promise<boolean>;
   signup: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => void;
-  updateUser: (data: Partial<User>) => Promise<boolean>;
+  updateUser: (data: any) => Promise<boolean>;
 }
+
+// 2. Helper para manejar el almacenamiento local
+const updateStorage = (user: User | null) => {
+  if (user) {
+    localStorage.setItem('user', JSON.stringify(user));
+    if (user.access) localStorage.setItem('authtoken', user.access);
+    if (user.refresh) localStorage.setItem('refreshtoken', user.refresh);
+  } else {
+    localStorage.removeItem('user');
+    localStorage.removeItem('authtoken');
+    localStorage.removeItem('refreshtoken');
+  }
+};
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: JSON.parse(localStorage.getItem("user") || "null"),
   isLoading: false,
   error: null,
 
-  // Función para iniciar sesión
   login: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post<User>('login/', { email, password });
-      const userData = response.data;
-
-      if (userData) {
-        set({ user: userData, isLoading: false });
-        if (userData.access) {
-          localStorage.setItem('authtoken', userData.access);
-        }
-        if (userData.refresh) {
-          localStorage.setItem('refreshtoken', userData.refresh);
-        }
-        localStorage.setItem('user', JSON.stringify(userData));
-        return true;
-      } else {
-        set({ error: 'Credenciales inválidas', isLoading: false });
-        return false;
-      }
-    } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const errorMessage = (err as any).response?.data?.message || 'Error al iniciar sesión';
-      set({ error: errorMessage, isLoading: false });
+      const { data } = await api.post<User>('login/', { email, password });
+      set({ user: data, isLoading: false });
+      updateStorage(data);
+      return true;
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.message || 'Credenciales inválidas',
+        isLoading: false
+      });
       return false;
     }
   },
 
-  // Función para registrarse
   signup: async (email, password, name) => {
     set({ isLoading: true, error: null });
     try {
-      // Mapping name to first_name and setting username as email for DRF User model
-      const response = await api.post<User>('signup/', {
+      const { data } = await api.post<User>('signup/', {
         email,
         password,
         first_name: name,
         username: email
       });
-      const newUser = response.data;
-
-      if (newUser) {
-        set({ user: newUser, isLoading: false });
-        if (newUser.access) {
-          localStorage.setItem('authtoken', newUser.access);
-        }
-        if (newUser.refresh) {
-          localStorage.setItem('refreshtoken', newUser.refresh);
-        }
-        localStorage.setItem('user', JSON.stringify(newUser));
-        return true;
-      } else {
-        set({ error: 'Error al registrarse', isLoading: false });
-        return false;
-      }
-    } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const errorMessage = (err as any).response?.data?.message || 'Error al registrarse';
-      set({ error: errorMessage, isLoading: false });
+      set({ user: data, isLoading: false });
+      updateStorage(data);
+      return true;
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.message || 'Error en el registro',
+        isLoading: false
+      });
       return false;
     }
   },
 
-  // Función para cerrar sesión
-  logout: () => {
-    set({ user: null, error: null });
-    localStorage.removeItem('authtoken');
-    localStorage.removeItem('refreshtoken');
-    localStorage.removeItem('user');
-  },
-
-  // Función para modificar el perfil del usuario
   updateUser: async (data) => {
     set({ isLoading: true, error: null });
+    const currentUser = get().user;
+    if (!currentUser) return false;
+
     try {
-      const currentUser = get().user;
-      if (!currentUser) {
-        set({ error: 'No hay usuario autenticado para actualizar', isLoading: false });
-        return false;
-      }
+      // Manejo dinámico de Payload (JSON o FormData para imágenes)
+      let payload: any = data;
+      let headers = {};
 
-      const response = await api.put<User>(`users/${currentUser.id}/`, data);
-      const updatedUser = response.data;
-
-      if (updatedUser) {
-        set((state) => {
-          const newUser = { ...state.user, ...updatedUser } as User;
-          localStorage.setItem('user', JSON.stringify(newUser));
-          return {
-            user: newUser,
-            isLoading: false,
-          };
+      if (data.avatar instanceof File) {
+        const formData = new FormData();
+        // Recorremos los datos para construir el FormData correctamente
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== undefined) formData.append(key, value as any);
         });
-        return true;
-      } else {
-        set({ error: 'Error al actualizar el perfil', isLoading: false });
-        return false;
+        payload = formData;
+        headers = { "Content-Type": "multipart/form-data" };
       }
-    } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const errorMessage = (err as any).response?.data?.message || 'Error al actualizar el perfil';
-      set({ error: errorMessage, isLoading: false });
+
+      // Usamos PATCH para actualizaciones parciales
+      const { data: updatedUser } = await api.patch<User>(
+        `users/${currentUser.id}/`,
+        payload,
+        { headers }
+      );
+
+      // Fusionamos el estado anterior con el nuevo para no perder tokens
+      set((state) => {
+        const newUser = { ...state.user, ...updatedUser } as User;
+        updateStorage(newUser);
+        return { user: newUser, isLoading: false };
+      });
+
+      return true;
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.message || 'Error al actualizar',
+        isLoading: false
+      });
       return false;
     }
+  },
+
+  logout: () => {
+    set({ user: null, error: null });
+    updateStorage(null);
   },
 }));

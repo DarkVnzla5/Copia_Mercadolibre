@@ -4,7 +4,7 @@ import { Forklift, CirclePile, ReceiptText } from "lucide-react";
 
 function Bar() {
 	return (
-		<section className="flex gap-4 justify-between">
+		<section className="flex gap-4 justify-between p-4 mb-4">
 			<div>
 				<button className="btn btn-primary">
 					<Link to="Logistics">

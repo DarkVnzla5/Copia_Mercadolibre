@@ -1,319 +1,413 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from "react";
+import { useProducts } from "../hooks/useProducts";
 import {
-	Package,
-	Save,
-	FileSpreadsheet,
-	AlertCircle,
-	Briefcase
-} from 'lucide-react';
+  Package,
+  Save,
+  Plus,
+  Trash2,
+  ShoppingCart,
+  Search
+} from "lucide-react";
 import { useDolar } from "../hooks/useDolar";
 
 const Entry = () => {
-	const { dolarData } = useDolar();
+  const { dolarData } = useDolar();
+  const { products, addProduct } = useProducts();
 
-	// Type definition for product data
-	interface ProductData {
-		type: string;
-		code: string;
-		quantity: number;
-		unitPrice: number;
-		shipping: number;
-		adjustment: number;
-		tax: number;
-		imageUrl: string;
-	}
+  // --- DEFINICIÓN DE DATOS ---
+  interface ProductData {
+    id?: number;
+    type: string;
+    code: string;
+    name: string; // <--- NUEVO CAMPO AGREGADO
+    quantity: number;
+    unitPrice: number;
+    shipping: number;
+    adjustment: number;
+    tax: number;
+    imageUrl: string;
+  }
 
-	// Initial state for the product or invoice
-	const [productData, setProductData] = useState<ProductData>({
-		type: 'factura',
-		code: '',
-		quantity: 1,
-		unitPrice: 0,
-		shipping: 0,
-		adjustment: 0,
-		tax: 75,
-		imageUrl: ''
-	});
+  const initialProductState: ProductData = {
+    type: "factura",
+    code: "",
+    name: "", // <--- INICIALIZACIÓN
+    quantity: 0,
+    unitPrice: 0,
+    shipping: 0,
+    adjustment: 0,
+    tax: 75,
+    imageUrl: "",
+  };
 
-	// System states
-	const [saving, setSaving] = useState(false);
-	const [status, setStatus] = useState({ type: '', msg: '' });
+  const [productData, setProductData] = useState<ProductData>(initialProductState);
+  const [invoiceItems, setInvoiceItems] = useState<ProductData[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState({ type: "", msg: "" });
 
+  // --- MANEJADORES ---
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => e.target.select();
 
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
 
-	// Automatic selection when focusing to allow immediate typing
-	const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-		e.target.select();
-	};
+    if (name === "type") {
+      const newTax = value === "factura" ? 75 : 0; // Ajusta este 75% o 16% según tu caso real
+      setProductData((prev) => ({ ...prev, type: value, tax: newTax }));
+      return;
+    }
 
-	// Improved Input Handling: Clears leading zeros and manages state
-	const handleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-		const { name, value, type } = e.target;
+    if (type === "number") {
+      const numericValue = value === "" ? 0 : parseFloat(value);
+      setProductData((prev) => ({ ...prev, [name]: numericValue }));
+    } else {
+      setProductData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
 
-		if (name === 'type') {
-			const newTax = value === 'factura' ? 75 : 16;
-			setProductData(prev => ({ ...prev, type: value, tax: newTax }));
-			return;
-		}
+  // --- LÓGICA DE FACTURA ---
+  const addToInvoice = () => {
+    // Validación: Ahora requerimos el Nombre también
+    if (!productData.code || !productData.name || productData.quantity <= 0 || productData.unitPrice <= 0) {
+      setStatus({ type: "error", msg: "Faltan datos (Código, Nombre, Cantidad o Precio)." });
+      setTimeout(() => setStatus({ type: "", msg: "" }), 3000);
+      return;
+    }
 
-		if (type === 'number') {
-			const numericValue = value === '' ? 0 : parseFloat(value);
-			setProductData(prev => ({ ...prev, [name]: numericValue }));
-		} else {
-			setProductData(prev => ({ ...prev, [name]: value }));
-		}
-	};
+    const newItem = { ...productData, id: Date.now() };
+    setInvoiceItems([...invoiceItems, newItem]);
 
-	// Calculation Logic
-	const calculate = () => {
-		const subtotal = (productData.unitPrice || 0) * (productData.quantity || 0);
-		const baseWithExtras = subtotal + (productData.shipping || 0) + (productData.adjustment || 0);
-		const taxAmount = baseWithExtras * (productData.tax / 100);
-		const totalUsd = baseWithExtras + taxAmount;
-		const totalVes = dolarData ? totalUsd * Number(dolarData) : 0;
+    // Limpiamos formulario pero mantenemos configuración base
+    setProductData({
+      ...initialProductState,
+      type: productData.type,
+      tax: productData.tax
+    });
 
-		return { subtotal, taxAmount, totalUsd, totalVes };
-	};
+    // Poner foco en el input de código nuevamente (opcional, requiere useRef)
+  };
 
-	const totals = calculate();
+  const removeFromInvoice = (id: number) => {
+    setInvoiceItems(invoiceItems.filter(item => item.id !== id));
+  };
 
-	// Save to PostgreSQL via DRF
-	const handleSave = async () => {
-		setSaving(true);
-		setStatus({ type: '', msg: '' });
-		try {
-			await new Promise(res => setTimeout(res, 1500));
-			setStatus({ type: 'success', msg: `DATOS GUARDADOS: ${productData.type.toUpperCase()} EN POSTGRESQL` });
-		} catch (err) {
-			setStatus({ type: 'error', msg: 'ERROR: FALLO AL GUARDAR EN EL BACKEND' });
-		} finally {
-			setSaving(false);
-		}
-	};
+  // --- CÁLCULOS ---
+  const totals = useMemo(() => {
+    let subtotal = 0;
+    let shipping = 0;
+    let adjustment = 0;
+    let taxAmount = 0;
 
-	return (
-		<div className="bg-base-200 min-h-screen font-sans p-6 text-base-content">
-			<div className="max-w-[1400px] mx-auto">
+    invoiceItems.forEach(item => {
+      const itemSubtotal = item.quantity * item.unitPrice;
+      const itemBase = itemSubtotal + item.shipping + item.adjustment;
+      const itemTax = itemBase * (item.tax / 100);
 
-				{/* HEADER CON TÍTULO ACTUALIZADO */}
-				<div className="flex items-center justify-between bg-base-100 p-4 rounded-2xl shadow-sm mb-6 border border-base-300">
-					<div className="flex items-center gap-4">
-						<div className="bg-primary p-2 rounded-lg text-primary-content shadow-lg shadow-primary/20">
-							<Package size={24} />
-						</div>
-						<div>
-							<h1 className="text-xl font-black text-base-content tracking-tight leading-none uppercase">Entrada de Inventario</h1>
-							<p className="text-[10px] text-base-content/60 font-bold mt-1 tracking-widest uppercase">Sistema de Gestión Pro | DRF + Postgres</p>
-						</div>
-					</div>
-				</div>
+      subtotal += itemSubtotal;
+      shipping += item.shipping;
+      adjustment += item.adjustment;
+      taxAmount += itemTax;
+    });
 
-				<div className="grid grid-cols-12 gap-6">
+    const totalUsd = subtotal + shipping + adjustment + taxAmount;
+    const totalVes = dolarData ? totalUsd * Number(dolarData) : 0;
 
-					{/* MAIN FORM */}
-					<div className="col-span-12 lg:col-span-8 space-y-6">
-						<div className="bg-base-100 rounded-3xl shadow-sm border border-base-300 overflow-hidden">
-							<div className="bg-base-200/50 p-4 border-b border-base-300 flex justify-between items-center px-8">
-								<span className="text-xs font-black text-base-content/70 uppercase tracking-widest flex items-center gap-2">
-									<FileSpreadsheet size={16} className="text-primary" /> Detalle del Ingreso
-								</span>
-								<div className="flex gap-1.5">
-									<div className="w-2.5 h-2.5 rounded-full bg-base-300"></div>
-									<div className="w-2.5 h-2.5 rounded-full bg-base-300"></div>
-								</div>
-							</div>
+    return { subtotal, shipping, adjustment, taxAmount, totalUsd, totalVes };
+  }, [invoiceItems, dolarData]);
 
-							<div className="p-8">
-								{/* SELECTOR DE TIPO */}
-								<div className="mb-8 p-6 bg-base-200/50 rounded-2xl border border-base-300 flex flex-col md:flex-row gap-6 items-center">
-									<div className="w-full md:w-1/2">
-										<label className="label py-0"><span className="label-text font-black text-base-content/70 text-[10px] uppercase">Categoría de Operación</span></label>
-										<select
-											name="type"
-											value={productData.type}
-											onChange={handleInput}
-											tabIndex={1}
-											className="select select-bordered w-full bg-base-100 rounded-xl font-bold text-primary mt-2 border-base-300 focus:border-primary"
-										>
-											<option value="factura">Factura de Venta (Fija 75%)</option>
-											<option value="servicio">Servicios / Inventario (Variable)</option>
-										</select>
-									</div>
-									<div className={`w-full md:w-1/2 p-4 rounded-xl border flex items-center gap-3 ${productData.type === 'factura' ? 'bg-primary/10 border-primary/20' : 'bg-warning/10 border-warning/20'}`}>
-										<AlertCircle size={20} className={productData.type === 'factura' ? 'text-primary' : 'text-warning'} />
-										<p className="text-[11px] font-bold text-base-content/80 leading-tight italic">
-											{productData.type === 'factura'
-												? 'Configuración automática para facturación de ley.'
-												: 'Permite ajuste manual del porcentaje de entrada.'}
-										</p>
-									</div>
-								</div>
+  const handleSaveInvoice = async () => {
+    setSaving(true);
+    // Simulación de guardado
+    setTimeout(() => {
+      setSaving(false);
+      setInvoiceItems([]);
+      setStatus({ type: "success", msg: "Factura guardada exitosamente" });
+    }, 1500);
+  };
 
-								{/* NUMERIC FIELDS */}
-								<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-									<div className="form-control">
-										<label className="label py-1 uppercase text-[10px] font-black text-base-content/40">Código Producto</label>
-										<input
-											name="code"
-											value={productData.code}
-											onChange={handleInput}
-											onFocus={handleFocus}
-											tabIndex={2}
-											className="input input-bordered w-full bg-base-200 focus:bg-base-100 font-mono text-sm border-base-300"
-											placeholder="SKU-XXX"
-										/>
-									</div>
-									<div className="form-control">
-										<label className="label py-1 uppercase text-[10px] font-black text-base-content/40">Cantidad</label>
-										<input
-											type="number"
-											name="quantity"
-											value={productData.quantity === 0 ? '' : productData.quantity}
-											onChange={handleInput}
-											onFocus={handleFocus}
-											tabIndex={3}
-											className="input input-bordered w-full bg-base-200 focus:bg-base-100 font-bold border-base-300"
-										/>
-									</div>
-									<div className="form-control">
-										<label className="label py-1 uppercase text-[10px] font-black text-base-content/40">Costo / Precio ($)</label>
-										<input
-											type="number"
-											name="unitPrice"
-											value={productData.unitPrice === 0 ? '' : productData.unitPrice}
-											onChange={handleInput}
-											onFocus={handleFocus}
-											tabIndex={4}
-											className="input input-bordered w-full bg-base-200 focus:bg-base-100 text-primary font-bold border-base-300"
-										/>
-									</div>
-								</div>
+  return (
+    <div className="bg-base-200 min-h-screen font-sans p-4 md:p-6 text-base-content">
+      <div className="max-w-[1600px] mx-auto">
 
-								<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-									<div className="form-control">
-										<label className="label py-1 uppercase text-[10px] font-black text-base-content/40">Flete ($)</label>
-										<input
-											type="number"
-											name="shipping"
-											value={productData.shipping === 0 ? '' : productData.shipping}
-											onChange={handleInput}
-											onFocus={handleFocus}
-											tabIndex={5}
-											className="input input-bordered w-full bg-base-200 focus:bg-base-100 border-base-300"
-										/>
-									</div>
-									<div className="form-control">
-										<label className="label py-1 uppercase text-[10px] font-black text-warning">Ajuste Manual ($)</label>
-										<input
-											type="number"
-											name="adjustment"
-											value={productData.adjustment === 0 ? '' : productData.adjustment}
-											onChange={handleInput}
-											onFocus={handleFocus}
-											tabIndex={6}
-											className="input input-bordered w-full bg-warning/5 border-warning/20 focus:bg-base-100 font-bold text-warning"
-										/>
-									</div>
-									<div className="form-control">
-										<label className="label py-1 uppercase text-[10px] font-black text-primary">% Impuesto / Ret.</label>
-										<div className="relative">
-											<input
-												type="number"
-												name="tax"
-												value={productData.tax === 0 ? '' : productData.tax}
-												onChange={handleInput}
-												onFocus={handleFocus}
-												tabIndex={7}
-												className={`input input-bordered w-full font-black border-base-300 ${productData.type === 'factura' ? 'bg-primary/10 cursor-not-allowed border-primary/20' : 'bg-base-200 focus:bg-base-100'}`}
-												readOnly={productData.type === 'factura'}
-											/>
-											<span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-base-content/40">%</span>
-										</div>
-									</div>
-								</div>
+        {/* HEADER */}
+        <div className="flex items-center justify-between bg-base-100 p-4 rounded-2xl shadow-sm mb-6 border border-base-300">
+          <div className="flex items-center gap-4">
+            <div className="bg-primary p-2 rounded-lg text-primary-content shadow-lg shadow-primary/20">
+              <Package size={24} />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-base-content tracking-tight leading-none uppercase">
+                Entrada de Inventario
+              </h1>
+              <p className="text-[10px] text-base-content/60 font-bold mt-1 tracking-widest uppercase">
+                Gestión de Facturas | {invoiceItems.length} Items
+              </p>
+            </div>
+          </div>
+        </div>
 
-								{/* STATUS MESSAGE */}
-								{status.msg && (
-									<div className={`mt-6 alert ${status.type === 'success' ? 'bg-success text-success-content shadow-success/20' : 'alert-error'} rounded-2xl shadow-lg border-none animate-in fade-in slide-in-from-bottom-2`}>
-										<span className="font-black text-xs tracking-widest">{status.msg}</span>
-									</div>
-								)}
-							</div>
-						</div>
-					</div>
+        <div className="grid grid-cols-12 gap-6">
+          {/* --- COLUMNA IZQUIERDA (Formulario y Tabla) --- */}
+          <div className="col-span-12 lg:col-span-8 space-y-6">
 
-					{/* SIDEBAR TOTALS */}
-					<div className="col-span-12 lg:col-span-4 space-y-6">
+            {/* 1. FORMULARIO DE CARGA */}
+            <div className="bg-base-100 rounded-3xl shadow-sm border border-base-300 overflow-hidden">
+              <div className="bg-base-200/50 p-3 px-6 border-b border-base-300 flex justify-between items-center">
+                <span className="text-xs font-black text-base-content/70 uppercase tracking-widest flex items-center gap-2">
+                  <Plus size={16} className="text-primary" /> Nuevo Item
+                </span>
+              </div>
 
-						<div className="bg-base-100 rounded-3xl p-6 border border-base-300 shadow-sm flex items-center justify-between">
-							<div className="flex items-center gap-3">
-								<div className={`p-3 rounded-2xl ${productData.type === 'factura' ? 'bg-primary text-primary-content' : 'bg-warning text-warning-content shadow-lg shadow-warning/20'}`}>
-									{productData.type === 'factura' ? <Briefcase size={22} /> : <Package size={22} />}
-								</div>
-								<div>
-									<p className="text-[10px] font-black text-base-content/40 uppercase tracking-widest">Estado de Carga</p>
-									<p className="text-sm font-black text-base-content uppercase">{productData.type} Lista</p>
-								</div>
-							</div>
-						</div>
+              <div className="p-6">
+                {/* FILA 1: CÓDIGO - NOMBRE - TIPO */}
+                <div className="grid grid-cols-12 gap-4 mb-4 items-end">
+                  <div className="col-span-3 md:col-span-2 form-control">
+                    <label className="label py-1 text-[9px] font-black uppercase opacity-50">Código</label>
+                    <div className="relative">
+                      <input
+                        name="code"
+                        value={productData.code}
+                        onChange={handleInput}
+                        onFocus={handleFocus}
+                        className="input input-bordered input-sm w-full font-mono text-xs"
+                        placeholder="SKU..."
+                      />
+                      <Search size={12} className="absolute right-2 top-2 opacity-30" />
+                    </div>
+                  </div>
 
-						<div className="bg-neutral rounded-[2.5rem] p-8 shadow-2xl text-neutral-content relative overflow-hidden flex flex-col justify-between min-h-[450px]">
-							<div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] rounded-full"></div>
+                  {/* CAMPO NOMBRE AGREGADO AQUÍ */}
+                  <div className="col-span-9 md:col-span-7 form-control">
+                    <label className="label py-1 text-[9px] font-black uppercase opacity-50">Nombre del Producto</label>
+                    <input
+                      name="name"
+                      value={productData.name}
+                      onChange={handleInput}
+                      onFocus={handleFocus}
+                      className="input input-bordered input-sm w-full font-bold"
+                      placeholder="Ej: Taladro Percutor 1/2..."
+                      autoComplete="off"
+                    />
+                  </div>
 
-							<div className="relative z-10">
-								<div className="flex justify-between items-center mb-8 border-b border-white/5 pb-5">
-									<span className="text-[10px] font-black text-primary uppercase tracking-[0.4em] italic">Resumen de Entrada</span>
-									<div className="px-3 py-1 bg-white/5 rounded-lg text-[9px] font-mono text-neutral-content/40">
-										ID: {productData.code || 'DOC-PEND'}
-									</div>
-								</div>
+                  <div className="col-span-12 md:col-span-3 form-control">
+                    <label className="label py-1 text-[9px] font-black uppercase opacity-50">Tipo Impuesto</label>
+                    <select
+                      name="type"
+                      value={productData.type}
+                      onChange={handleInput}
+                      className="select select-bordered select-sm w-full text-xs font-bold"
+                    >
+                      <option value="factura">Factura (75%)</option>
+                      <option value="exento">Exento (0%)</option>
+                    </select>
+                  </div>
+                </div>
 
-								<div className="space-y-5">
-									<div className="flex justify-between text-neutral-content/60 items-baseline">
-										<span className="text-[10px] uppercase font-black tracking-widest">Base Imponible</span>
-										<span className="font-mono text-lg">${totals.subtotal.toFixed(2)}</span>
-									</div>
-									<div className="flex justify-between text-neutral-content/60 items-baseline">
-										<span className="text-[10px] uppercase font-black tracking-widest">Gastos / Ajuste</span>
-										<span className="font-mono text-lg">${(productData.adjustment + productData.shipping).toFixed(2)}</span>
-									</div>
-									<div className="flex justify-between text-primary items-baseline bg-primary/5 p-3 rounded-xl border border-primary/10">
-										<span className="text-[10px] uppercase font-black tracking-widest">Impuesto ({productData.tax}%)</span>
-										<span className="font-mono text-lg font-black">${totals.taxAmount.toFixed(2)}</span>
-									</div>
+                {/* FILA 2: CANTIDAD - PRECIOS - BOTÓN */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
+                  {/* CAMPO CANTIDAD */}
+                  <div className="form-control">
+                    <label className="label py-1 text-[9px] font-black uppercase opacity-50">Cantidad</label>
+                    <input
+                      type="number"
+                      name="quantity"
+                      value={productData.quantity || ""}
+                      onChange={handleInput}
+                      onFocus={handleFocus}
+                      className="input input-bordered input-sm font-black text-center"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="form-control">
+                    <label className="label py-1 text-[9px] font-black uppercase opacity-50">Costo Unit $</label>
+                    <input
+                      type="number"
+                      name="unitPrice"
+                      value={productData.unitPrice || ""}
+                      onChange={handleInput}
+                      onFocus={handleFocus}
+                      className="input input-bordered input-sm font-bold text-primary"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="form-control">
+                    <label className="label py-1 text-[9px] font-black uppercase opacity-50">Flete Total $</label>
+                    <input
+                      type="number"
+                      name="shipping"
+                      value={productData.shipping || ""}
+                      onChange={handleInput}
+                      onFocus={handleFocus}
+                      className="input input-bordered input-sm"
+                    />
+                  </div>
+                  <div className="form-control">
+                    <label className="label py-1 text-[9px] font-black uppercase opacity-50 text-warning">Ajuste $</label>
+                    <input
+                      type="number"
+                      name="adjustment"
+                      value={productData.adjustment || ""}
+                      onChange={handleInput}
+                      onFocus={handleFocus}
+                      className="input input-bordered input-sm text-warning"
+                    />
+                  </div>
 
-									<div className="pt-8 mt-4 border-t border-white/10">
-										<div className="flex justify-between items-center mb-6">
-											<span className="text-neutral-content text-xs font-black uppercase tracking-widest">TOTAL USD</span>
-											<span className="text-5xl font-black tracking-tighter text-neutral-content">${totals.totalUsd.toFixed(2)}</span>
-										</div>
+                  <button
+                    onClick={addToInvoice}
+                    className="btn btn-sm btn-primary w-full shadow-md hover:scale-105 transition-transform col-span-2 md:col-span-1"
+                  >
+                    <Plus size={16} /> Agregar
+                  </button>
+                </div>
 
-										<div className="bg-success/10 p-6 rounded-[2rem] border border-success/20 shadow-inner">
-											<p className="text-[10px] text-success font-black uppercase tracking-[0.2em] mb-2 text-center">Total en Bolívares (VES)</p>
-											<p className="text-3xl font-black text-success font-mono leading-none text-center">
-												Bs. {totals.totalVes.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
-											</p>
-										</div>
-									</div>
-								</div>
-							</div>
+                {status.msg && (
+                  <div className={`mt-4 alert alert-sm py-2 rounded-lg ${status.type === "success" ? "alert-success" : "alert-error"}`}>
+                    <span className="text-xs font-bold">{status.msg}</span>
+                  </div>
+                )}
+              </div>
+            </div>
 
-							{/* BOTÓN ACTUALIZADO A "GUARDAR" */}
-							<button
-								onClick={handleSave}
-								disabled={saving}
-								tabIndex={9}
-								className={`mt-10 w-full btn border-none h-16 rounded-[1.5rem] text-primary-content font-black text-xl shadow-2xl transition-all active:scale-95 ${saving ? 'btn-disabled' : 'btn-primary shadow-primary/30'}`}
-							>
-								{saving ? <span className="loading loading-spinner"></span> : <><Save className="mr-3" /> GUARDAR</>}
-							</button>
-						</div>
-					</div>
+            {/* 2. TABLA DE DETALLES */}
+            {invoiceItems.length > 0 ? (
+              <div className="bg-base-100 rounded-3xl shadow-sm border border-base-300 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="table table-sm w-full">
+                    <thead className="bg-base-200 text-base-content/60 uppercase font-black text-[10px]">
+                      <tr>
+                        <th className="pl-6">Código</th>
+                        <th>Producto</th> {/* NUEVA COLUMNA */}
+                        <th className="text-center">Cant.</th>
+                        <th className="text-right">Precio</th>
+                        <th className="text-right">Total Base</th>
+                        <th className="text-right">Imp.</th>
+                        <th className="text-center pr-6">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-xs">
+                      {invoiceItems.map((item, index) => {
+                        const sub = (item.quantity * item.unitPrice) + item.shipping + item.adjustment;
+                        const tx = sub * (item.tax / 100);
+                        return (
+                          <tr key={index} className="hover:bg-base-200/50 border-base-200">
+                            <td className="pl-6 font-mono opacity-70">{item.code}</td>
+                            <td className="font-bold text-base-content">{item.name}</td> {/* NOMBRE */}
+                            <td className="text-center font-bold">{item.quantity}</td>
+                            <td className="text-right opacity-80">${item.unitPrice.toFixed(2)}</td>
+                            <td className="text-right font-black text-primary">${sub.toFixed(2)}</td>
+                            <td className="text-right opacity-70">${tx.toFixed(2)}</td>
+                            <td className="text-center pr-6">
+                              <button
+                                onClick={() => item.id && removeFromInvoice(item.id)}
+                                className="btn btn-ghost btn-xs text-error hover:bg-error/10"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 border-2 border-dashed border-base-300 rounded-3xl opacity-50">
+                <p className="text-sm font-bold">La factura está vacía</p>
+                <p className="text-xs">Agrega productos usando el formulario de arriba</p>
+              </div>
+            )}
+          </div>
 
-				</div>
-			</div>
-		</div>
-	);
+          {/* --- COLUMNA DERECHA (Totales) --- */}
+          <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+
+            <div className="bg-base-100 rounded-3xl p-6 border border-base-300 shadow-sm flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-secondary text-secondary-content">
+                <ShoppingCart size={22} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black opacity-50 uppercase">Estado Factura</p>
+                <p className="text-sm font-black uppercase">{invoiceItems.length} Productos Cargados</p>
+              </div>
+            </div>
+
+            {/* RESUMEN FINANCIERO */}
+            <div className="bg-neutral rounded-[2.5rem] p-8 shadow-2xl text-neutral-content relative overflow-hidden flex-1 flex flex-col justify-end min-h-[400px]">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] rounded-full"></div>
+
+              <div className="relative z-10 space-y-4">
+                <div className="border-b border-white/10 pb-4 mb-4 flex justify-between items-end">
+                  <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Totales</span>
+                  <span className="text-[9px] opacity-40 font-mono">USD</span>
+                </div>
+
+                {/* DESGLOSE */}
+                <div className="space-y-3 text-sm font-medium">
+                  <div className="flex justify-between items-center text-neutral-content/60">
+                    <span>Subtotal Neto</span>
+                    <span className="font-mono">${totals.subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-neutral-content/60">
+                    <span>(+) Fletes Globales</span>
+                    <span className="font-mono">${totals.shipping.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-warning/80">
+                    <span>(+/-) Ajustes</span>
+                    <span className="font-mono">${totals.adjustment.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-primary font-bold bg-white/5 p-3 rounded-xl">
+                    <span>(+) Impuestos Total</span>
+                    <span className="font-mono">${totals.taxAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* TOTALES FINALES */}
+                <div className="pt-8 mt-4 border-t border-white/10 space-y-6">
+
+                  <div className="text-right">
+                    <p className="text-[10px] uppercase font-bold text-neutral-content/50 mb-1">Total a Pagar (USD)</p>
+                    <p className="text-5xl font-black tracking-tighter text-white leading-none">
+                      ${totals.totalUsd.toFixed(2)}
+                    </p>
+                  </div>
+
+                  <div className="bg-base-100 p-5 rounded-3xl border border-white/10 shadow-lg transform scale-100 lg:scale-105 origin-bottom-right">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-black text-base-content/50 uppercase tracking-widest">Bolívares</span>
+                      <span className="badge badge-xs badge-ghost font-mono text-[9px] opacity-70">Tasa: {dolarData}</span>
+                    </div>
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-xl font-black text-base-content/40 font-mono">Bs.</span>
+                      <span className="text-3xl font-black text-base-content font-mono tracking-tight text-right truncate pl-2">
+                        {totals.totalVes.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleSaveInvoice}
+                  disabled={saving || invoiceItems.length === 0}
+                  className={`mt-4 w-full btn border-none h-14 rounded-2xl font-black text-lg shadow-xl transition-all ${saving || invoiceItems.length === 0 ? "btn-disabled bg-white/10 text-white/20" : "btn-primary text-primary-content hover:scale-[1.02]"
+                    }`}
+                >
+                  {saving ? <span className="loading loading-dots"></span> : (
+                    <>
+                      <Save size={20} /> GUARDAR FACTURA
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Entry;

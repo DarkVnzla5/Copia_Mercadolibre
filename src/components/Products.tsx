@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router";
 import type { Product } from "../hooks/useProducts";
 import { useProducts } from "../hooks/useProducts";
@@ -33,7 +33,7 @@ const useFilteredProducts = (allProducts: Product[]) => {
 	return filteredProducts;
 };
 
-const Products: React.FC = () => {
+const Products = () => {
 	const { dolarData } = useDolar();
 	const { products: allProducts, isLoading, isError } = useProducts();
 	const filteredProducts = useFilteredProducts(allProducts);
@@ -54,24 +54,22 @@ const Products: React.FC = () => {
 
 	return (
 		<section className="flex-grow p-4">
-			{/* SECCIÓN DE NOVEDADES (Solo aparece si hay productos nuevos) */}
-			{
-				newArrivals.length > 0 && searchQuery === "" && (
-					<div className="mb-8">
-						<h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-							✨ Recién Llegados <div className="badge badge-secondary">Nuevo</div>
-						</h2>
-						<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-							{newArrivals.map(product => (
-								<Link key={`new-${product.id}`} to={`/products/${product.id}`} className="card bg-secondary text-secondary-content shadow-sm hover:scale-95 transition-transform">
-									<div className="card-body p-3">
-										<p className="text-xs font-bold truncate">{product.name}</p>
-									</div>
-								</Link>
-							))}
-						</div>
+			{newArrivals.length > 0 && searchQuery === "" && (
+				<div className="mb-8">
+					<h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+						✨ Recién Llegados <div className="badge badge-secondary">Nuevo</div>
+					</h2>
+					<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+						{newArrivals.map(product => (
+							<Link key={`new-${product.id}`} to={`/products/${product.id}`} className="card bg-secondary text-secondary-content shadow-sm hover:scale-95 transition-transform">
+								<div className="card-body p-3">
+									<p className="text-xs font-bold truncate">{product.name}</p>
+								</div>
+							</Link>
+						))}
 					</div>
-				)
+				</div>
+			)
 			}
 			{/* SECCIÓN DE PRODUCTOS */}
 			{filteredProducts.length === 0 ? (
