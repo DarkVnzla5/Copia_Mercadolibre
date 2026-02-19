@@ -6,9 +6,7 @@ export const API_BASE_URL = `${BASE_URL}/api/`;
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000, // Set a timeout of 10 seconds
-  headers: {
-    "Content-Type": "application/json",
-  },
+
 });
 
 api.interceptors.request.use(
@@ -19,6 +17,9 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"]
+    }
     return config;
   },
   (error) => {
@@ -28,11 +29,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if ((error.response?.status === 401 || error.response?.status === 403) && !window.location.pathname.includes("/LogIn")) {
+    if ((error.response?.status === 401 || error.response?.status === 403) && !window.location.pathname.includes("/Auths")) {
       // Token expirado o inválido - logout
       localStorage.removeItem("authtoken");
       localStorage.removeItem("user");
-      window.location.href = "/LogIn";
+      window.location.href = "/Auths";
       console.log(error.response?.status);
     }
 

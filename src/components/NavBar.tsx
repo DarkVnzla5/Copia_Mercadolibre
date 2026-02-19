@@ -5,7 +5,6 @@ import {
   X,
   User,
   LogIn,
-  UserPlus,
   ShoppingCart,
   LayoutDashboard,
   Tag,
@@ -74,10 +73,9 @@ function Header() {
                 <User className="size-6" />
               </Link>
             ) : (
-              <div className="flex gap-2">
-                <Link to="/LogIn" className="btn btn-primary btn-sm">Iniciar Sesión</Link>
-                <Link to="/SignUp" className="btn btn-secondary btn-sm">Crear Cuenta</Link>
-              </div>
+              <Link to="/Auths" className="btn btn-ghost btn-circle">
+                <User className="size-6" />
+              </Link>
             )}
 
             <Link to="/cart" className="btn btn-ghost btn-circle">
@@ -145,8 +143,7 @@ function Header() {
             ) : (
               <div className="flex flex-col gap-3">
                 <p className="font-bold text-center">¡Bienvenido!</p>
-                <Link to="/LogIn" onClick={closeMenu} className="btn btn-primary w-full"> <LogIn size={18} /> Iniciar Sesión</Link>
-                <Link to="/SignUp" onClick={closeMenu} className="btn btn-outline w-full"> <UserPlus size={18} /> Crear Cuenta</Link>
+                <Link to="/Auths" onClick={closeMenu} className="btn btn-primary w-full"> <LogIn size={18} /> Iniciar Sesión</Link>
               </div>
             )}
           </div>

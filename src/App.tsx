@@ -6,8 +6,6 @@ import Layout from "./components/Layout.tsx";
 import { ErrorBoundary } from "react-error-boundary";
 import Profile from "./Pages/Profile.tsx";
 import About from "./Pages/About.tsx";
-import LogIn from "./Pages/LogIn.tsx";
-import SignUp from "./Pages/SignUp.tsx";
 import Dashboard from "./Pages/Dashboard.tsx";
 import Details from "./Pages/Details.tsx";
 import Logistics from "./Pages/Logistics.tsx";
@@ -15,6 +13,7 @@ import Pedidos from "./Pages/Pedidos.tsx";
 import Cart from "./Pages/Cart.tsx";
 import Inventoryentry from "./Pages/Inventoryentry.tsx";
 import "./App.css";
+import Auths from "./Pages/Auths.tsx";
 
 const App: React.FC = () => {
   return (
@@ -44,8 +43,7 @@ const App: React.FC = () => {
             <Route path="cart" element={<Cart />} />
             <Route path="About" element={<About />} />
             <Route path="Profile" element={<Profile />} />
-            <Route path="LogIn" element={<LogIn />} />
-            <Route path="SignUp" element={<SignUp />} />
+            <Route path="Auths" element={<Auths />} />
             <Route path="Dashboard" element={<Dashboard />}>
               <Route path="Logistics" element={<Logistics />} />
               <Route path="Inventoryentry" element={<Inventoryentry />} />

@@ -41,17 +41,13 @@ export const useProducts = () => {
   // Add Product - supports both JSON and FormData
   const addProductMutation = useMutation({
     mutationFn: async (data: Product | FormData) => {
-      if (data instanceof FormData) {
-        const response = await api.post("products/", data, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        return response.data;
-      } else {
-        const response = await api.post("products/", data);
-        return response.data;
-      }
+      const response = await api.post("products/", data, {
+        transformRequest: [(data) => data],
+        headers: data instanceof FormData ?
+          { "Content-Type": "multipart/form-data" } :
+          { "Content-Type": "application/json" }
+      })
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
