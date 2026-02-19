@@ -41,12 +41,12 @@ export const useProducts = () => {
   // Add Product - supports both JSON and FormData
   const addProductMutation = useMutation({
     mutationFn: async (data: Product | FormData) => {
+      const isFormData = data instanceof FormData;
       const response = await api.post("products/", data, {
-        transformRequest: [(data) => data],
-        headers: data instanceof FormData ?
-          { "Content-Type": "multipart/form-data" } :
-          { "Content-Type": "application/json" }
-      })
+        headers: {
+          ...(isFormData ? { 'Content-Type': 'multipart/form-data' } : { 'Content-Type': 'application/json' })
+        }
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -55,29 +55,27 @@ export const useProducts = () => {
   });
 
   // Update Product - supports both JSON and FormData
+  // Items.tsx sends { formData: FormData, id: string }
   const updateProductMutation = useMutation({
-    mutationFn: async (data: any) => {
-      if (data.FormData && data.id) {
-        const response = await api.put(`products/${data.id}/`, data.FormData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        return response.data;
-      } else {
-        const response = await api.put(`products/${data.id}/`, data);
-        return response.data;
-      }
+    mutationFn: async ({ id, formData }: { id: string | number, formData: FormData | Record<string, any> }) => {
+      const isFormData = formData instanceof FormData;
+      const response = await api.patch(`products/${id}/`, formData, {
+        headers: {
+          ...(isFormData ? { 'Content-Type': 'multipart/form-data' } : { 'Content-Type': 'application/json' })
+        }
+      });
+      return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["products", variables.id.toString()] });
     },
   })
 
 
   // Delete Product
   const deleteProductMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id: string | number) => {
       await api.delete(`products/${id}/`);
     },
     onSuccess: () => {
