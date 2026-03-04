@@ -1,17 +1,16 @@
-import React from "react";
 import { Outlet } from "react-router";
 import Bars from "../components/Bars";
 
-const Dashboard: React.FC = () => {
+function Dashboard() {
   return (
-    <section className="p-8 bg-base-200 min-h-screen">
-      <section>
+    <div>
+      <aside>
         <Bars />
-      </section>
+      </aside>
       <section>
         <Outlet />
       </section>
-    </section>
+    </div>
   );
 };
 

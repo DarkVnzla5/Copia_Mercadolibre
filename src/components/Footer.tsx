@@ -16,11 +16,10 @@ const Footer: React.FC = () => (
       <div>
         <span className="footer-title">Sígueme</span>
         <div className="grid grid-flow-col gap-4">
-          <Link
-            to="https://www.facebook.com/"
+          <Link to="https://www.linkedin.com/in/felipe-luna-14aab53a2"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Facebook"
+            aria-label="LinkedIn"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

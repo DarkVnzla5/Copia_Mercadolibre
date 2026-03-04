@@ -1,494 +1,216 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo } from "react";
 import { useDolar } from "../hooks/useDolar";
 
-// --- Interfaces de Tipos ---
-
-// 1. Interfaz base para los productos
+// Interface para el producto guardado
 interface Product {
   id: number;
   nombre: string;
-  precio: number; // Precio unitario en USD
+  precioLote: number;
   cantidad: number;
+  unidad: string;
 }
-
-// 2. Interfaz para los cálculos extendidos
-interface CalculatedProduct extends Product {
-  // Costos intermedios y finales
-  costUSD: number; // Costo Total (cantidad * precio)
-  costBS: number; // Costo Total VES @ BCV
-  costBSWithIVA: number; // Costo + IVA VES @ BCV
-  costBsWithGanancia: number; // Costo + IVA + Ganancia VES @ BCV
-  costBSFinal: number; // Precio de Venta Final VES @ BCV
-
-  finalCostUSD: number; // Precio de Venta Final en USD
-  finalCostBSFixed: number; // Precio de Venta Final VES @ Tasa Fija
-}
-
-// --- Componente Principal ---
 
 const Pedidos: React.FC = () => {
-  // --- Estados y Hooks ---
-  const { dolarData: bcvRate, loading, error } = useDolar();
-  // Tasa BCV ahora manejada por estado local y con un valor inicial
+  const { dolarData: bcvRate, loading } = useDolar();
+
+  // Estados de configuración (Factores) - Usamos strings para manejo fluido de inputs
+  const [ivaFactor, setIvaFactor] = useState<string>("16");
+  const [gainFactor, setGainFactor] = useState<string>("30");
+  const [freightFactor, setFreightFactor] = useState<string>("10");
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [fixedRate, setFixedRate] = useState<number>(0); // Tasa fija inicial
 
-  // Factores de Cálculo (Editable): Se guardan como factor decimal (0.16)
-  const [ivaFactor, setIvaFactor] = useState<number>(0.16);
-  const [gainFactor, setGainFactor] = useState<number>(0.3);
-  const [freightFactor, setFreightFactor] = useState<number>(0.1); // Usamos freightFactor para "Exento - Flete"
-
-  // Estado para el formulario de nuevo producto
+  // Formulario con strings vacíos para evitar el "0" fastidioso
   const [newProduct, setNewProduct] = useState({
     nombre: "",
-    precio: 0,
-    cantidad: 1,
+    precioLote: "",
+    cantidad: "",
+    unidad: "Unidades",
   });
 
-  // --- Handlers de Configuración ---
+  // --- Manejadores de Input ---
 
-  const handleRateChange = (
-    setter: React.Dispatch<React.SetStateAction<number>>,
-    value: string
-  ) => {
-    const num = parseFloat(value);
-    if (!isNaN(num) && num >= 0) {
-      setter(num);
-    }
-  };
-
-  const handleFactorChange = (
-    setter: React.Dispatch<React.SetStateAction<number>>,
-    value: string
-  ) => {
-    const num = parseFloat(value);
-    if (!isNaN(num) && num >= 0) {
-      // Almacenamos el valor como factor (e.g., 16 -> 0.16)
-      setter(num / 100);
-    } else {
-      setter(0);
-    }
-  };
-
-  // --- Handlers de Producto ---
-
-  const handleNewProductChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-
-    let parsedValue: string | number;
-
-    if (type === "number") {
-      parsedValue = parseFloat(value);
-      parsedValue = isNaN(parsedValue) ? 0 : parsedValue;
-    } else {
-      parsedValue = value;
-    }
-
-    setNewProduct((prev) => ({
-      ...prev,
-      [name]: parsedValue,
-    }));
-  };
+  const handleNumericInput = (val: string) => val.replace(",", ".");
 
   const handleAddProduct = (e: React.FormEvent) => {
     e.preventDefault();
-    const { nombre, cantidad, precio } = newProduct;
+    const precio = parseFloat(newProduct.precioLote);
+    const cant = parseFloat(newProduct.cantidad);
 
-    if (nombre.trim() && cantidad > 0 && precio >= 0) {
-      const newId = products.length
-        ? Math.max(...products.map((p) => p.id)) + 1
-        : 1;
-
-      setProducts((prev) => [
-        ...prev,
+    if (newProduct.nombre.trim() && !isNaN(precio) && !isNaN(cant)) {
+      setProducts([
+        ...products,
         {
-          ...newProduct,
-          id: newId,
-          nombre: nombre.trim(),
+          id: Date.now(),
+          nombre: newProduct.nombre,
+          precioLote: precio,
+          cantidad: cant,
+          unidad: newProduct.unidad,
         },
       ]);
-      setNewProduct({ nombre: "", cantidad: 1, precio: 0 });
+      // Limpiamos el formulario
+      setNewProduct({ nombre: "", precioLote: "", cantidad: "", unidad: "Unidades" });
     }
   };
 
-  const handleDeleteProduct = useCallback((id: number) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-  }, []);
+  // --- Cálculos Memoizados ---
 
-  // --- Cálculos de Costos y Totales (Memoizados) ---
+  const calculatedItems = useMemo(() => {
+    const rateBCV = bcvRate || 0;
+    const iva = (parseFloat(ivaFactor) || 0) / 100;
+    const gain = (parseFloat(gainFactor) || 0) / 100;
+    const freight = (parseFloat(freightFactor) || 0) / 100;
 
-  const { calculatedProducts, totals } = useMemo(() => {
-    const calculated: CalculatedProduct[] = products.map((product) => {
-      // 1. Costo Total (USD)
-      const costUSD = product.precio;
+    return products.map((p) => {
+      // Costo Base por cada unidad (ej: costo de 1kg si el lote es de 20kg)
+      const baseUnitUSD = p.precioLote / p.cantidad;
 
-      // 2. Multiplicadores de Marcado (Markup)
-      const multiplierIVA = 1 + ivaFactor;
-      const multiplierGain = 1 + gainFactor;
-      const multiplierFreight = 1 + freightFactor;
-
-      // 3. Cálculos de Costos Intermedios
-      const costBS = costUSD * bcvRate;
-      const costBSWithIVA = costUSD * multiplierIVA * bcvRate;
-      const costBsWithGanancia =
-        costUSD * multiplierIVA * multiplierGain * bcvRate;
-
-      // 4. Precio de Venta Final
-      const finalCostUSD =
-        costUSD * multiplierIVA * multiplierGain * multiplierFreight;
-      const costBSFinal = finalCostUSD * bcvRate; // Final Price VES @ BCV
-      const finalCostBSFixed = finalCostUSD * fixedRate; // Final Price VES @ Tasa Fija
+      // Aplicación de factores: Costo * IVA * Ganancia * Flete
+      const finalUnitUSD = baseUnitUSD * (1 + iva) * (1 + gain) * (1 + freight);
 
       return {
-        ...product,
-        costUSD,
-        costBS,
-        costBSWithIVA,
-        costBsWithGanancia,
-        costBSFinal,
-        finalCostUSD,
-        finalCostBSFixed,
+        ...p,
+        baseUnitUSD,
+        finalUnitUSD,
+        finalUnitVES_BCV: finalUnitUSD * Number(rateBCV),
       };
     });
+  }, [products, bcvRate, ivaFactor, gainFactor, freightFactor]);
 
-    // Sumar todos los totales para el pie de tabla
-    const totalCostUSD = calculated.reduce((sum, p) => sum + p.costUSD, 0);
-    const totalFinalCostUSD = calculated.reduce(
-      (sum, p) => sum + p.finalCostUSD,
-      0
-    );
-    const totalFinalCostBSFixed = calculated.reduce(
-      (sum, p) => sum + p.finalCostBSFixed,
-      0
-    );
-    const totalCostBSFinal = calculated.reduce(
-      (sum, p) => sum + p.costBSFinal,
-      0
-    );
-
-    return {
-      calculatedProducts: calculated,
-      totals: {
-        totalCostUSD,
-        totalFinalCostUSD,
-        totalFinalCostBSFixed,
-        totalCostBSFinal,
-      },
-    };
-  }, [products, fixedRate, bcvRate, ivaFactor, gainFactor, freightFactor]);
-
-  // --- Formato de Moneda ---
-  const formatCurrency = (value: number, currency: "USD" | "VES") => {
-    return value.toLocaleString("es-VE", {
+  const formatCur = (val: number, cur: "USD" | "VES") =>
+    val.toLocaleString("es-VE", {
       style: "currency",
-      currency: currency === "USD" ? "USD" : "VES",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      currency: cur,
+      minimumFractionDigits: 2
     });
-  };
-
-  // --- Renderizado ---
 
   return (
-    <div className="min-h-screen bg-base-100 p-4 font-sans">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-extrabold text-center mb-8 text-primary">
-          Calculadora de Costos y Precios de Venta
-        </h1>
+    <div className="min-h-screen bg-base-300 p-4 md:p-10 font-sans text-base-content">
+      <div className="max-w-5xl mx-auto">
+        <header className="mb-8 text-center">
+          <h1 className="text-4xl font-black text-primary italic uppercase tracking-tighter">
+            Calculadora <span className="text-secondary">Vuelvan</span>
+          </h1>
+          <div className="badge badge-outline badge-secondary mt-2 font-mono p-4">
+            {loading ? "Cargando BCV..." : `Tasa BCV: ${Number(bcvRate).toFixed(2)} Bs.`}
+          </div>
+        </header>
 
-        {/* Bloque de Tasas y Factores */}
-        <div className="card bg-base-200 shadow-xl mb-8 p-6 border-t-4 border-accent">
-          <h2 className="text-2xl font-bold mb-4 text-secondary text-center border-b pb-2">
-            Configuración de Tasas y Factores
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {/* Tasa BCV (Ahora Editable) */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold">
-                  Tasa BCV (VES/USD)
-                </span>
-              </label>
-              <input
-                type="text"
-                className="input input-bordered input-primary w-full text-lg font-bold"
-                value={
-                  loading
-                    ? "Cargando Dólar..."
-                    : error
-                    ? "Error al cargar Dólar"
-                    : bcvRate
-                    ? ` ${bcvRate.toFixed(2)} Bs.`
-                    : "Dólar: N/A"
-                }
-              />
-              <p className="text-xs text-neutral-content mt-1">
-                Ingreso manual
-              </p>
-            </div>
-
-            {/* Tasa Fija */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold">Tasa Fija (BS)</span>
-              </label>
-              <input
-                type="text"
-                className="input input-bordered input-primary w-full text-lg font-bold"
-                value={fixedRate}
-                onChange={(e) => handleRateChange(setFixedRate, e.target.value)}
-                step="0.01"
-                min="0"
-              />
-              <p className="text-xs text-neutral-content mt-1">
-                Binance / Euros
-              </p>
-            </div>
-
-            {/* IVA (%) */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold">IVA (%)</span>
-              </label>
-              <input
-                type="text"
-                className="input input-bordered input-primary w-full text-lg font-bold"
-                value={(ivaFactor * 100).toFixed(2)}
-                onChange={(e) =>
-                  handleFactorChange(setIvaFactor, e.target.value)
-                }
-                step="1"
-                min="0"
-              />
-              <p className="text-xs text-neutral-content mt-1">
-                Valor sin porcentaje (ej: 16)
-              </p>
-            </div>
-
-            {/* Ganancia (%) */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold">Ganancia (%)</span>
-              </label>
-              <input
-                type="text"
-                className="input input-bordered input-primary w-full text-lg font-bold"
-                value={(gainFactor * 100).toFixed(1)}
-                onChange={(e) =>
-                  handleFactorChange(setGainFactor, e.target.value)
-                }
-                step="1"
-                min="0"
-              />
-              <p className="text-xs text-neutral-content mt-1">
-                Valor sin porcentaje (ej: 30)
-              </p>
-            </div>
-
-            {/* Exento - Flete (%) */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold">
-                  Exento - Flete (%)
-                </span>
-              </label>
-              <input
-                type="text"
-                className="input input-bordered input-primary w-full text-lg font-bold"
-                value={(freightFactor * 100).toFixed(0)}
-                onChange={(e) =>
-                  handleFactorChange(setFreightFactor, e.target.value)
-                }
-                step="1"
-                min="0"
-              />
-              <p className="text-xs text-neutral-content mt-1">
-                Factor de Costo (ej: 10)
-              </p>
-            </div>
+        {/* Configuración de Factores (IVA, Ganancia, Flete) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-base-200 p-6 rounded-box shadow-xl mb-8 border border-primary/20">
+          <div className="form-control">
+            <label className="label-text font-bold text-primary mb-2">IVA (%)</label>
+            <input
+              className="input input-bordered bg-base-100"
+              value={ivaFactor}
+              onChange={(e) => setIvaFactor(handleNumericInput(e.target.value))}
+            />
+          </div>
+          <div className="form-control">
+            <label className="label-text font-bold text-primary mb-2">Ganancia (%)</label>
+            <input
+              className="input input-bordered bg-base-100"
+              value={gainFactor}
+              onChange={(e) => setGainFactor(handleNumericInput(e.target.value))}
+            />
+          </div>
+          <div className="form-control">
+            <label className="label-text font-bold text-primary mb-2">Flete (%)</label>
+            <input
+              className="input input-bordered bg-base-100"
+              value={freightFactor}
+              onChange={(e) => setFreightFactor(handleNumericInput(e.target.value))}
+            />
           </div>
         </div>
 
-        {/* Bloque de Carga de Producto */}
-        <div className="card bg-base-100 shadow-xl mb-8 p-6 border-t-4 border-primary">
-          <h2 className="text-2xl font-bold mb-4 text-primary border-b pb-2">
-            Añadir Producto
-          </h2>
-          <form
-            onSubmit={handleAddProduct}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end"
-          >
-            {/* Nombre */}
-            <div className="form-control col-span-2 md:col-span-1">
-              <label className="label">
-                <span className="label-text">Nombre del Producto</span>
-              </label>
+        {/* Formulario de carga de productos */}
+        <div className="card bg-primary text-primary-content shadow-2xl mb-8 border-none">
+          <form onSubmit={handleAddProduct} className="card-body grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            <div className="form-control md:col-span-1">
+              <label className="label-text text-primary-content font-bold">Producto</label>
               <input
-                type="text"
-                name="nombre"
-                placeholder="Ej: Zapatos Deportivos"
-                className="input input-bordered w-full text-secondary text-lg font-bold"
+                required
+                className="input input-ghost bg-base-100/20 text-white placeholder:text-white/40"
                 value={newProduct.nombre}
-                onChange={handleNewProductChange}
-                required
+                onChange={(e) => setNewProduct({ ...newProduct, nombre: e.target.value })}
+                placeholder="Descripción"
               />
             </div>
-
-            {/* Precio Unitario (USD) */}
             <div className="form-control">
-              <label className="label">
-                <span className="label-text">P. Unitario (USD)</span>
-              </label>
-              <input
-                type="number"
-                name="precio"
-                placeholder="10.50"
-                className="input input-bordered w-full text-secondary text-lg font-bold"
-                value={newProduct.precio}
-                onChange={handleNewProductChange}
-                step="0.01"
-                min="0"
-                required
-              />
+              <label className="label-text text-primary-content font-bold">Unidad</label>
+              <select
+                className="select select-ghost bg-base-100/20 text-white"
+                value={newProduct.unidad}
+                onChange={(e) => setNewProduct({ ...newProduct, unidad: e.target.value })}
+              >
+                <option className="text-black">Unidades</option>
+                <option className="text-black">Pares</option>
+                <option className="text-black">Kgs</option>
+                <option className="text-black">Rollos</option>
+              </select>
             </div>
-
-            {/* Cantidad */}
             <div className="form-control">
-              <label className="label">
-                <span className="label-text ">Cantidad</span>
-              </label>
+              <label className="label-text text-primary-content font-bold">Cant. Lote</label>
               <input
-                type="number"
-                name="cantidad"
-                placeholder="1"
-                className="input input-bordered w-full text-secondary text-lg font-bold"
+                required
+                className="input input-ghost bg-base-100/20 text-white"
                 value={newProduct.cantidad}
-                onChange={handleNewProductChange}
-                required
+                onChange={(e) => setNewProduct({ ...newProduct, cantidad: handleNumericInput(e.target.value) })}
+                placeholder="Ej: 20"
               />
             </div>
-
-            {/* Botón Añadir */}
-            <button
-              type="submit"
-              className="btn btn-primary w-full col-span-2 md:col-span-1 text-secondary text-lg font-bold"
-            >
-              Añadir Producto
-            </button>
+            <div className="form-control">
+              <label className="label-text text-primary-content font-bold">Costo Lote ($)</label>
+              <input
+                required
+                className="input input-ghost bg-base-100/20 text-white"
+                value={newProduct.precioLote}
+                onChange={(e) => setNewProduct({ ...newProduct, precioLote: handleNumericInput(e.target.value) })}
+                placeholder="0.00"
+              />
+            </div>
+            <button className="btn btn-secondary border-none font-black uppercase shadow-lg">Agregar</button>
           </form>
         </div>
 
-        {/* Bloque de Tabla de Resultados */}
-        <div className="card bg-base-100 shadow-xl">
-          <h2 className="text-2xl font-bold mb-4 p-6 text-primary border-b">
-            Articulos Agregados: {products.length === 0 ? "" : products.length}
-          </h2>
-
-          {products.length === 0 ? (
-            <div className="text-center py-12 text-secondary">
-              <p>
-                No hay productos cargados. ¡Añade productos para ver los
-                cálculos!
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="table w-full table-zebra">
-                {/* Cabecera */}
-                <thead>
-                  <tr className="bg-base-200">
-                    <th className="w-[3%]">#</th>
-                    <th className="w-[15%]">Producto</th>
-                    <th className="w-[8%] text-center">Cant.</th>
-                    <th className="w-[10%] text-right">Costo ($)</th>
-                    <th className="w-[12%] text-right">Costo * BCV</th>
-                    <th className="w-[12%] text-right">Costo Total</th>
-                    <th className="w-[15%] text-right text-primary">
-                      Venta Final (*Binance)
-                    </th>
-                    <th className="w-[15%] text-right text-secondary">
-                      Venta Final (VES BCV)
-                    </th>
-                    <th className="w-[5%] text-center">Acción</th>
-                  </tr>
-                </thead>
-                {/* Cuerpo */}
-                <tbody>
-                  {calculatedProducts.map((p, index) => (
-                    <tr key={p.id} className="hover:bg-base-100">
-                      <td>{index + 1}</td>
-                      <td className="font-semibold">{p.nombre}</td>
-                      <td className="text-center">{p.cantidad}</td>
-                      <td className="text-right font-bold text-success">
-                        {formatCurrency(p.costUSD, "USD")}
-                      </td>
-                      <td className="text-right text-base-content/70">
-                        {formatCurrency(p.costBS, "VES")}
-                      </td>
-                      <td className="text-right text-warning font-extrabold">
-                        {formatCurrency(p.finalCostUSD, "USD")}
-                      </td>
-                      {/* Precio de Venta Final VES (Tasa Fija) */}
-                      <td className="text-right text-primary font-medium">
-                        {formatCurrency(p.finalCostBSFixed, "VES")}
-                      </td>
-                      {/* Precio de Venta Final VES (Tasa BCV) - Este es el costBSFinal */}
-                      <td className="text-right text-secondary font-bold">
-                        {formatCurrency(p.costBSFinal, "VES")}
-                      </td>
-                      <td className="text-center">
-                        <button
-                          className="btn btn-ghost btn-xs text-error"
-                          onClick={() => handleDeleteProduct(p.id)}
-                          aria-label={`Eliminar producto ${p.nombre}`}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                {/* Pie de Tabla (Totales) */}
-                <tfoot>
-                  <tr className="bg-neutral text-neutral-content font-extrabold text-lg">
-                    <td colSpan={3} className="text-right">
-                      TOTALES
-                    </td>
-                    {/* Total Costo Real USD */}
-                    <td className="text-right">
-                      {formatCurrency(totals.totalCostUSD, "USD")}
-                    </td>
-                    <td></td> {/* Costo Total VES @ BCV no sumado */}
-                    {/* Total Precio Venta Final USD */}
-                    <td className="text-right">
-                      {formatCurrency(totals.totalFinalCostUSD, "USD")}
-                    </td>
-                    {/* Total Venta Final VES Fija */}
-                    <td className="text-right text-primary">
-                      {formatCurrency(totals.totalFinalCostBSFixed, "VES")}
-                    </td>
-                    {/* Total Venta Final VES BCV */}
-                    <td className="text-right text-secondary">
-                      {formatCurrency(totals.totalCostBSFinal, "VES")}
-                    </td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              </table>
+        {/* Tabla de Resultados */}
+        <div className="bg-base-200 rounded-box shadow-inner overflow-hidden border border-base-content/10">
+          <table className="table table-zebra w-full text-center">
+            <thead className="bg-neutral text-neutral-content uppercase text-xs">
+              <tr>
+                <th className="text-left">Item</th>
+                <th>Costo Lote ($)</th>
+                <th className="text-secondary">Costo por Unidad ($)</th>
+                <th className="text-success text-lg font-black">Venta Unit (Bs)</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {calculatedItems.map((p) => (
+                <tr key={p.id} className="hover:bg-base-100 transition-colors">
+                  <td className="text-left">
+                    <span className="font-black block uppercase text-sm">{p.nombre}</span>
+                    <span className="text-[10px] opacity-60 italic">Costo unitario base: ${p.baseUnitUSD.toFixed(2)}</span>
+                  </td>
+                  <td className="font-mono text-xs">{formatCur(p.precioLote, "USD")}</td>
+                  <td className="font-black text-secondary">{formatCur(p.finalUnitUSD, "USD")}</td>
+                  <td className="font-black text-success text-lg">{formatCur(p.finalUnitVES_BCV, "VES")}</td>
+                  <td>
+                    <button
+                      onClick={() => setProducts(products.filter(i => i.id !== p.id))}
+                      className="btn btn-circle btn-ghost btn-xs text-error"
+                    >
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {products.length === 0 && (
+            <div className="p-16 text-center opacity-20 font-black uppercase tracking-[0.3em]">
+              Sin productos cargados
             </div>
           )}
         </div>
@@ -496,4 +218,5 @@ const Pedidos: React.FC = () => {
     </div>
   );
 };
+
 export default Pedidos;

@@ -1,9 +1,8 @@
-import React from "react";
 import Records from "./Records";
 
-const Logistics: React.FC = () => {
+function Logistics() {
   return (
-    <div className="p-8 bg-base-200">
+    <div>
       <Records />
     </div>
   );

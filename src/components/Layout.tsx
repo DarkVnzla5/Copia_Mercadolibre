@@ -1,18 +1,17 @@
 import { Outlet } from "react-router";
 import Header from "./NavBar";
 import Footer from "./Footer";
-import React from "react";
 
-const Layout: React.FC = () => {
-
+function Layout() {
   return (
-    <div >
+    <section >
       <Header />
-      <div>
+      <main>
         <Outlet />
-      </div>
+      </main>
       <Footer />
-    </div>
+    </section>
+
   );
 };
 export default Layout;

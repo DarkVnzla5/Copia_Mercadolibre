@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
 import {
   Menu,
@@ -9,32 +9,27 @@ import {
   LayoutDashboard,
   Tag,
   LogOut,
-  UserRoundPlus
 } from "lucide-react";
 import SearchBar from "./SearchBar";
 import { useDolar } from "../hooks/useDolar";
 import { BussinesName } from "../Constants/Constants";
-import DeliveryModal from "./Buttons";
 import { useAuthStore } from "../stores/useAuthStore";
 
 function Header() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { dolarData } = useDolar();
   const { user, logout } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isLoggedIn = !!user;
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Aquí puedes subir el archivo al servidor
-      console.log("Archivo seleccionado:", file);
+  function verifications() {
+    // Corrección: Guardamos el rol y lo comparamos correctamente
+    const role = user?.role?.toLowerCase();
+    if (role === "staff" || role === "admin") {
+      console.log({ role });
+    } else {
+      console.log({ role });
     }
-  };
+  }
 
   // Función para cerrar el menú móvil al hacer click en un link
   const closeMenu = () => setIsMenuOpen(false);
@@ -47,7 +42,7 @@ function Header() {
 
           {/* LOGO: Siempre visible */}
           <Link to="/" className="flex-shrink-0">
-            <button className="btn btn-ghost text-primary normal-case text-xl px-2">
+            <button className="btn btn-ghost text-primary normal-case text-xl px-2" onClick={verifications}>
               {BussinesName}
             </button>
           </Link>
@@ -59,8 +54,6 @@ function Header() {
 
           {/* ACCIONES ESCRITORIO (Solo >= 1024px) */}
           <div className="hidden lg:flex items-center gap-4">
-            <DeliveryModal />
-
             <div className="flex flex-col items-end leading-tight border-x px-4 border-base-300">
               <span className="text-xs opacity-60">Dólar</span>
               <span className="text-sm font-bold">
@@ -68,10 +61,17 @@ function Header() {
               </span>
             </div>
 
+            {/* Corrección: Lógica del Avatar en Escritorio */}
             {isLoggedIn ? (
-              <Link to="/Profile" className="btn btn-ghost btn-circle">
-                <User className="size-6" />
-              </Link>
+              <div className="btn btn-outline btn-circle overflow-hidden">
+                <Link to="/Profile" className="w-full h-full flex items-center justify-center">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="Avatar" className="w-8 h-8 object-cover rounded-full" />
+                  ) : (
+                    <User className="size-6" />
+                  )}
+                </Link>
+              </div>
             ) : (
               <Link to="/Auths" className="btn btn-ghost btn-circle">
                 <User className="size-6" />
@@ -93,18 +93,22 @@ function Header() {
         </div>
 
         {/* --- FILA INFERIOR (Solo Escritorio) --- */}
+        {/* Enlace EXTRA solo para ADMIN o STAFF */}
         <div className="hidden lg:flex justify-center gap-8 mt-2 pb-2 border-t border-base-300 pt-2">
-          <Link to="/Dashboard" className="flex items-center gap-2 hover:text-primary transition-colors">
-            <LayoutDashboard size={18} /> Gestión de Empresa
-          </Link>
-          <Link to="/Offers" className="flex items-center gap-2 hover:text-primary transition-colors">
+          {(user?.role?.toLowerCase() === "staff" || user?.role?.toLowerCase() === "admin") && (
+            <Link to="/Dashboard" className="btn btn-outline">
+              <LayoutDashboard size={18} /> Gestión de Empresa
+            </Link>
+          )}
+          {/* Enlaces visibles para TODOS (Clientes y Admin) */}
+          <Link to="/Offers" className="btn btn-outline">
             <Tag size={18} /> Ofertas
           </Link>
+
         </div>
       </div>
 
       {/* --- MENÚ MÓVIL (OVERLAY) --- */}
-      {/* Se activa cuando isMenuOpen es true y la pantalla es pequeña */}
       <div className={`
         fixed inset-0 bg-base-100 z-40 transform transition-transform duration-300 ease-in-out lg:hidden
         ${isMenuOpen ? "translate-x-0" : "translate-x-full"}
@@ -115,27 +119,23 @@ function Header() {
           <div className="bg-base-200 p-4 rounded-2xl">
             {isLoggedIn ? (
               <div className="flex items-center gap-4">
-                <div className="btn btn-ghost btn-circle btn-md overflow-hidden" onClick={handleAvatarClick}>
-
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept="image/*"
-                  />
-                  {user?.avatar ? (
-                    <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="flex items-center justify-center">
-                      <UserRoundPlus className="size-8 text-primary" />
-                    </div>
-                  )}
+                <div className="btn btn-ghost btn-circle btn-md overflow-hidden bg-base-300">
+                  <div className="flex items-center justify-center w-full h-full">
+                    <Link to="/Profile" onClick={closeMenu}>
+                      {/* Corrección: Fallback del Avatar en Móvil */}
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover cursor-pointer" />
+                      ) : (
+                        <User className="size-6 cursor-pointer" />
+                      )}
+                    </Link>
+                  </div>
                 </div>
                 <div>
-                  <p className="font-bold text-lg">Hola, {user?.first_name + " " + user?.last_name}!</p>
+                  <p className="font-bold text-lg">Hola, {user?.first_name ? `${user.first_name} ${user.last_name || ""}` : "Usuario"}!</p>
+                  <p>{user?.username}</p>
                   <p className="text-sm opacity-60">{user?.email}</p>
-                  <button onClick={() => { logout(); closeMenu(); }} className="text-error text-sm flex items-center gap-1">
+                  <button onClick={() => { logout(); closeMenu(); }} className="btn btn-outline btn-sm mt-2" >
                     <LogOut size={14} /> Cerrar Sesión
                   </button>
                 </div>
@@ -149,17 +149,23 @@ function Header() {
           </div>
 
           {/* Enlaces de Navegación Móvil */}
-          <div className="flex flex-col gap-2">
-            <Link to="/cart" onClick={closeMenu} className="btn btn-ghost justify-start gap-4 text-lg">
-              <ShoppingCart /> Mi Carrito
-            </Link>
-            <Link to="/Dashboard" onClick={closeMenu} className="btn btn-ghost justify-start gap-4 text-lg">
-              <LayoutDashboard /> Gestión de Empresa
-            </Link>
-            <Link to="/Offers" onClick={closeMenu} className="btn btn-ghost justify-start gap-4 text-lg">
-              <Tag /> Ofertas
-            </Link>
-          </div>
+          {user?.role?.toLowerCase() === "staff" || user?.role?.toLowerCase() === "admin" ? (
+            <div className="flex flex-col gap-2">
+              <Link to="/Dashboard" onClick={closeMenu} className="btn btn-ghost justify-start gap-4 text-lg">
+                <LayoutDashboard /> Gestión de Empresa
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Link to="/cart" onClick={closeMenu} className="btn btn-ghost justify-start gap-4 text-lg">
+                <ShoppingCart /> Mi Carrito
+              </Link>
+
+              <Link to="/Offers" onClick={closeMenu} className="btn btn-ghost justify-start gap-4 text-lg">
+                <Tag /> Ofertas
+              </Link>
+            </div>
+          )}
 
           {/* Info del Dólar en Móvil */}
           <div className="mt-auto border-t pt-4 text-center text-sm">

@@ -13,7 +13,7 @@ const Auths: React.FC = () => {
   const [name, setName] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const { signup, login, user, error, isLoading } = useAuthStore();
+  const { signup, login, user, error, isLoading, socialAuth } = useAuthStore();
   const navigate = useNavigate();
 
   // Redirección si el usuario ya está autenticado
@@ -42,6 +42,16 @@ const Auths: React.FC = () => {
       if (success) {
         navigate("/");
       }
+    }
+  };
+  const handleSocialLogin = async (provider: string) => {
+    setLocalError(null);
+    try {
+      const token = await getGoogleToken();
+      const success = await socialAuth(provider, token);
+      if (success) navigate("/");
+    } catch (err) {
+      setLocalError(`Error al conectar con ${provider}`);
     }
   };
 
@@ -175,9 +185,29 @@ const Auths: React.FC = () => {
           <div className="divider text-xs text-base-content/40 uppercase">O continuar con</div>
 
           {/* Botones Sociales (Ejemplo de diseño moderno) */}
+          {/* Botones Sociales Integrados */}
           <div className="grid grid-cols-2 gap-2">
-            <button className="btn btn-outline btn-sm font-bold">Google</button>
-            <button className="btn btn-outline btn-sm font-bold">GitHub</button>
+            <button
+              type="button"
+              className={`btn btn-outline btn-sm font-bold ${isLoading ? "btn-disabled" : ""}`}
+              onClick={() => handleSocialLogin('google')}
+            >
+              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C9.03,19.27 6.59,17.4 6.59,14C6.59,10.6 9.03,8.73 12.19,8.73C14.19,8.73 15.6,9.47 16.59,10.17L18.65,8.11C17.25,6.8 15.1,5.65 12.19,5.65C7.2,5.65 3.74,9.41 3.74,14C3.74,18.59 7.2,22.35 12.19,22.35C16.8,22.35 21.5,19.35 21.5,14C21.5,13 21.4,12.13 21.35,11.1Z" />
+              </svg>
+              Google
+            </button>
+
+            <button
+              type="button"
+              className={`btn btn-outline btn-sm font-bold ${isLoading ? "btn-disabled" : ""}`}
+              onClick={() => handleSocialLogin('github')}
+            >
+              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.6 14.5,20.68 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z" />
+              </svg>
+              GitHub
+            </button>
           </div>
         </div>
       </div>

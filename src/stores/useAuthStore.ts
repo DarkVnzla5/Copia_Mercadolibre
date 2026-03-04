@@ -12,6 +12,7 @@ interface User {
   avatar?: string; // URL del avatar
   access?: string;
   refresh?: string;
+
 }
 
 interface AuthState {
@@ -22,6 +23,7 @@ interface AuthState {
   signup: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => void;
   updateUser: (data: any) => Promise<boolean>;
+  socialAuth: (provider: string, token: string) => Promise<boolean>;
 }
 
 // 2. Helper para manejar el almacenamiento local
@@ -41,7 +43,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: JSON.parse(localStorage.getItem("user") || "null"),
   isLoading: false,
   error: null,
-
+  socialAuth: async (provider: string, token: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await api.post<User>(`auth/${provider}/`, { token: token });
+      set({ user: data, isLoading: false });
+      updateStorage(data);
+      return true;
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.message || "Error al autenticar ${ provider}",
+        isLoading: false
+      });
+      return false;
+    }
+  },
   login: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
@@ -61,7 +77,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signup: async (email, password, name) => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await api.post<User>('signup/', {
+      const { data } = await api.post<any>('signup/', {
         email,
         password,
         first_name: name,
@@ -86,24 +102,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     try {
       // Manejo dinámico de Payload (JSON o FormData para imágenes)
-      let payload: any = data;
-      let headers = {};
+      let payload: any;
 
       if (data.avatar instanceof File) {
         const formData = new FormData();
-        // Recorremos los datos para construir el FormData correctamente
-        Object.entries(data).forEach(([key, value]) => {
-          if (value !== undefined) formData.append(key, value as any);
-        });
+        if (data.first_name) formData.append("first_name", data.first_name);
+        if (data.last_name) formData.append("last_name", data.last_name);
+        if (data.email) formData.append("email", data.email);
+        formData.append("avatar", data.avatar);
         payload = formData;
-        headers = { "Content-Type": "multipart/form-data" };
+      } else {
+        const { avatar, ...rest } = data;
+        payload = rest;
       }
 
       // Usamos PATCH para actualizaciones parciales
       const { data: updatedUser } = await api.patch<User>(
         `users/${currentUser.id}/`,
-        payload,
-        { headers }
+        payload
       );
 
       // Fusionamos el estado anterior con el nuevo para no perder tokens
